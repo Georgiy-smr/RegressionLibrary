@@ -25,7 +25,7 @@ namespace Regression.Approximators
         /// <param name="pow"></param>
         /// <param name="x"></param>
         /// <param name="y"></param>
-        public List<double> CalcRoots(int n, int pow, double[] x, double[] y)
+        public List<double> CalcCoeffs(int n, int pow, double[] x, double[] y)
         {
             // Step 1
             double[,] Y = new double[pow + 1, 1];

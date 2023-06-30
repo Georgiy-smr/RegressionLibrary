@@ -25,7 +25,7 @@ namespace Regression.Interpolators
         /// <param name="x"></param>
         /// <param name="y"></param>
         /// <returns></returns>
-        public List<double> CalcRoots(int n, double[] x, double[] y)
+        public List<double> CalcCoeffs(int n, double[] x, double[] y)
         {
             // Step 1 
             double[,] Y = new double[n, 1];

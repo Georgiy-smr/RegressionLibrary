@@ -14,11 +14,11 @@
   "project": {
     "version": "1.0.1",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Альфапаскаль\\source\\repos\\ClassLibraryMath\\ClassLibraryMath\\Regression.csproj",
+      "projectUniqueName": "C:\\Users\\Альфапаскаль\\Documents\\GitFork\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj",
       "projectName": "Regression",
-      "projectPath": "C:\\Users\\Альфапаскаль\\source\\repos\\ClassLibraryMath\\ClassLibraryMath\\Regression.csproj",
+      "projectPath": "C:\\Users\\Альфапаскаль\\Documents\\GitFork\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj",
       "packagesPath": "C:\\Users\\Альфапаскаль\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Альфапаскаль\\source\\repos\\ClassLibraryMath\\ClassLibraryMath\\obj\\",
+      "outputPath": "C:\\Users\\Альфапаскаль\\Documents\\GitFork\\RegressionLibrary\\ClassLibraryMath\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

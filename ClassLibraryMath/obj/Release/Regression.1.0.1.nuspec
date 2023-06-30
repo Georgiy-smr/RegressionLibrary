@@ -15,7 +15,7 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\bin\Release\net6.0\Regression.dll" target="lib\net6.0\Regression.dll" />
-    <file src="C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\bin\Release\net6.0\Assets\icon-ap.png" target="\icon-ap.png" />
+    <file src="C:\Users\Альфапаскаль\Documents\GitFork\RegressionLibrary\ClassLibraryMath\bin\Release\net6.0\Regression.dll" target="lib\net6.0\Regression.dll" />
+    <file src="C:\Users\Альфапаскаль\Documents\GitFork\RegressionLibrary\ClassLibraryMath\bin\Release\net6.0\Assets\icon-ap.png" target="\icon-ap.png" />
   </files>
 </package>

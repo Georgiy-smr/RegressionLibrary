@@ -41,7 +41,7 @@
             for (int i = 0; i < n - 1; i++)
                 _bCoeffs[i] = y[i] - _kCoeffs[i] * x[i];
 
-            return new List<double[]> { _bCoeffs, _kCoeffs};
+            return new List<double[]> { _kCoeffs, _bCoeffs};
         }
 
         #endregion
