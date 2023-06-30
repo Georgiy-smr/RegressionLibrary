@@ -1,0 +1,12 @@
+C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\bin\Debug\net6.0\Regression.deps.json
+C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\bin\Debug\net6.0\Regression.dll
+C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\bin\Debug\net6.0\Regression.pdb
+C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\obj\Debug\net6.0\Regression.csproj.AssemblyReference.cache
+C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\obj\Debug\net6.0\Regression.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\obj\Debug\net6.0\Regression.AssemblyInfoInputs.cache
+C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\obj\Debug\net6.0\Regression.AssemblyInfo.cs
+C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\obj\Debug\net6.0\Regression.csproj.CoreCompileInputs.cache
+C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\obj\Debug\net6.0\Regression.dll
+C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\obj\Debug\net6.0\refint\Regression.dll
+C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\obj\Debug\net6.0\Regression.pdb
+C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\obj\Debug\net6.0\ref\Regression.dll

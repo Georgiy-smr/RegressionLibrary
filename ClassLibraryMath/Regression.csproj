@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Title>AlphaPascal.Math.Regression</Title>
+    <Company>AlphaPascal</Company>
+    <Description>The library for working with regression analysis from Alfapascal</Description>
+    <PackageIcon>icon-ap.png</PackageIcon>
+    <PackageTags>Regression, Linear, Spline, AlphaPascal </PackageTags>
+    <PackageReadmeFile></PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="bin\Release\net6.0\Assets\icon-ap.png">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
+  </ItemGroup>
+	
+	<PropertyGroup>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		<Version>1.0.1</Version>
+	</PropertyGroup>
+
+</Project>

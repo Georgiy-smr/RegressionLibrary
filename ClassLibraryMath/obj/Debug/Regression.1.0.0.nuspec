@@ -1,0 +1,19 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd">
+  <metadata>
+    <id>Regression</id>
+    <version>1.0.0</version>
+    <title>Regression</title>
+    <authors>Regression</authors>
+    <icon>icon-ap.png</icon>
+    <description>Библеотека работы с регрессионным анализом</description>
+    <tags>Regression, Linear, Spline, AlphaPascal</tags>
+    <dependencies>
+      <group targetFramework="net6.0" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\bin\Debug\net6.0\Regression.dll" target="lib\net6.0\Regression.dll" />
+    <file src="C:\Users\Альфапаскаль\source\repos\ClassLibraryMath\ClassLibraryMath\bin\Debug\net6.0\icon-ap.png" target="\icon-ap.png" />
+  </files>
+</package>
