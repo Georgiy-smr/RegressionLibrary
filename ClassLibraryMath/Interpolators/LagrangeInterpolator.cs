@@ -56,7 +56,28 @@ namespace Regression.Interpolators
 
             return _coeffs.ToList();
         }
+        /// <summary>
+        /// The function returns the correction value by the coefficients of Lagrange polynomial
+        /// </summary>
+        /// <param name="NotCorValue"></param>
+        /// <returns></returns>
+        public double CorValue(double NotCorValue)
+        {
+            if (_coeffs != null)
+            {
+            double corrValue=0;
+            for (int i = 0; i < _coeffs.Count(); i++)
+            {
+                {
+                    corrValue += _coeffs[i] * Math.Pow(NotCorValue,
+                        (_coeffs.Count() - (i + 1)));
+                }
+            }
+            return corrValue;
+            }
+            else return 0.0;
 
+        }
         #endregion
     }
 }

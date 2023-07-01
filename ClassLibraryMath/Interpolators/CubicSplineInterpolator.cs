@@ -26,6 +26,10 @@
         /// Coefficients d the cubic spline
         /// </summary>
         private double[] _dCoeffs;
+        /// <summary>
+        /// Input Value
+        /// </summary>
+        private double[] _X;
 
         #endregion
 
@@ -36,6 +40,8 @@
         /// </summary>
         public List<double[]> CalcCoeffs(int n, double[] x, double[] y)
         {
+            _X = x;
+
             n--;
 
             // Initialize
@@ -98,7 +104,52 @@
 
             return new List<double[]> { _aCoeffs, _bCoeffs, _cCoeffs, _dCoeffs };
         }
+        /// <summary>
+        /// The function returns the correction value by the coefficients of Cubic spline
+        /// </summary>
+        /// <param name="NotCorValue"></param>
+        /// <returns></returns>
+        public double CorValue(double NotCorValue)
+        {
+            if (_X != null)
+            {
+            int NumerPoly = NumPoly(NotCorValue);
+            // Step 2:
+            double corrValue = _aCoeffs[NumerPoly] +
+             _bCoeffs[NumerPoly] * Math.Pow((NotCorValue - _X[NumerPoly]), 1)+
+             _cCoeffs[NumerPoly] * Math.Pow((NotCorValue - _X[NumerPoly]), 2)+
+             _dCoeffs[NumerPoly] * Math.Pow((NotCorValue - _X[NumerPoly]), 3);
+            return corrValue;
+            }
+            else return 0.0;
+        }
+        /// <summary>
+        /// Function return numer of polynom in dependence in input value.
+        /// </summary>
+        /// <param name="Value"></param>
+        /// <returns></returns>
+        private int NumPoly(double Value)
+        {
+            int N = 0;
+            int CountPoly = _X.Length - 1;
+            // Step 1: under point ?
+            if (Value <= _X[0]) { N = 0; return N; }
+
+            //  : over point ?
+            else if (Value >= _X[CountPoly])
+            { N = CountPoly; return N - 1; }
+
+            //  : between?
+            else
+            {
+                for (int i = 0; i < CountPoly; ++i)
+                    if (Value >= _X[i] && Value <= _X[i + 1])
+                        N = i;
+            }
+            return N;
+        }
 
         #endregion
+
     }
 }
