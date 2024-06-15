@@ -10,19 +10,27 @@
     <Description>The library for working with regression analysis from Alfapascal</Description>
     <PackageIcon>icon-ap.png</PackageIcon>
     <PackageTags>Regression, Linear, Spline, AlphaPascal </PackageTags>
-    <PackageReadmeFile></PackageReadmeFile>
+    <PackageReadmeFile>Descriptions.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
+    <None Include="bin\Release\Descriptions.md">
+      <Pack>True</Pack>
+      <PackagePath>\</PackagePath>
+    </None>
     <None Include="bin\Release\net6.0\Assets\icon-ap.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
   </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MathNet.Symbolics" Version="0.25.0" />
+  </ItemGroup>
 	
 	<PropertyGroup>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
-		<Version>1.0.1</Version>
+		<Version>1.0.4</Version>
 	</PropertyGroup>
 
 </Project>

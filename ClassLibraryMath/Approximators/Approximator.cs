@@ -12,7 +12,7 @@ namespace Regression.Approximators
         /// <summary>
         /// Coefficients of the equation
         /// </summary>
-        public double[] _coeffs;
+        public double[]? _coeffs;
 
         #endregion
 

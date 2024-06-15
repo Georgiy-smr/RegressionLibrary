@@ -14,11 +14,11 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("AlphaPascal")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("The library for working with regression analysis from Alfapascal")]
-[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.1.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.1")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.3.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.3+c7c1e34f01870561e3a7ce2008c6aa8c3702081d")]
 [assembly: System.Reflection.AssemblyProductAttribute("Regression")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Regression")]
-[assembly: System.Reflection.AssemblyVersionAttribute("1.0.1.0")]
+[assembly: System.Reflection.AssemblyVersionAttribute("1.0.3.0")]
 
 // Создано классом WriteCodeFragment MSBuild.
 
