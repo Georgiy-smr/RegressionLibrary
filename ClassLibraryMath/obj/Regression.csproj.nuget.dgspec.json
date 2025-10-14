@@ -1,32 +1,33 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\Гоша и Аня\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj": {}
+    "C:\\Users\\Анна\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj": {}
   },
   "projects": {
-    "C:\\Users\\Гоша и Аня\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj": {
-      "version": "1.0.4",
+    "C:\\Users\\Анна\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj": {
+      "version": "1.0.5",
       "restore": {
-        "projectUniqueName": "C:\\Users\\Гоша и Аня\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj",
+        "projectUniqueName": "C:\\Users\\Анна\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj",
         "projectName": "Regression",
-        "projectPath": "C:\\Users\\Гоша и Аня\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj",
-        "packagesPath": "C:\\Users\\Гоша и Аня\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\Гоша и Аня\\RegressionLibrary\\ClassLibraryMath\\obj\\",
+        "projectPath": "C:\\Users\\Анна\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj",
+        "packagesPath": "C:\\Users\\Анна\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\Анна\\RegressionLibrary\\ClassLibraryMath\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "C:\\Users\\Гоша и Аня\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Users\\Анна\\AppData\\Roaming\\NuGet\\NuGet.Config",
           "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
         ],
         "originalTargetFrameworks": [
-          "net6.0"
+          "net8.0"
         ],
         "sources": {
           "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+          "C:\\Program Files\\dotnet\\library-packs": {},
           "https://api.nuget.org/v3/index.json": {}
         },
         "frameworks": {
-          "net6.0": {
-            "targetAlias": "net6.0",
+          "net8.0": {
+            "targetAlias": "net8.0",
             "projectReferences": {}
           }
         },
@@ -42,8 +43,8 @@
         }
       },
       "frameworks": {
-        "net6.0": {
-          "targetAlias": "net6.0",
+        "net8.0": {
+          "targetAlias": "net8.0",
           "dependencies": {
             "MathNet.Symbolics": {
               "target": "Package",
@@ -66,7 +67,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.201\\RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.400/PortableRuntimeIdentifierGraph.json"
         }
       }
     }

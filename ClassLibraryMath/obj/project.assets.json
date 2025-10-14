@@ -1,7 +1,7 @@
 {
   "version": 3,
   "targets": {
-    "net6.0": {
+    "net8.0": {
       "FParsec/2.0.0-beta2": {
         "type": "package",
         "dependencies": {
@@ -81,12 +81,12 @@
       "MathNet.Numerics/6.0.0-beta1": {
         "type": "package",
         "compile": {
-          "lib/net6.0/MathNet.Numerics.dll": {
+          "lib/net8.0/MathNet.Numerics.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net6.0/MathNet.Numerics.dll": {
+          "lib/net8.0/MathNet.Numerics.dll": {
             "related": ".xml"
           }
         }
@@ -98,12 +98,12 @@
           "MathNet.Numerics": "6.0.0-beta1"
         },
         "compile": {
-          "lib/net6.0/MathNet.Numerics.FSharp.dll": {
+          "lib/net8.0/MathNet.Numerics.FSharp.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net6.0/MathNet.Numerics.FSharp.dll": {
+          "lib/net8.0/MathNet.Numerics.FSharp.dll": {
             "related": ".xml"
           }
         }
@@ -117,12 +117,12 @@
           "MathNet.Numerics.FSharp": "6.0.0-beta1"
         },
         "compile": {
-          "lib/net6.0/MathNet.Symbolics.dll": {
+          "lib/net8.0/MathNet.Symbolics.dll": {
             "related": ".xml"
           }
         },
         "runtime": {
-          "lib/net6.0/MathNet.Symbolics.dll": {
+          "lib/net8.0/MathNet.Symbolics.dll": {
             "related": ".xml"
           }
         }
@@ -258,36 +258,37 @@
     }
   },
   "projectFileDependencyGroups": {
-    "net6.0": [
+    "net8.0": [
       "MathNet.Symbolics >= 0.25.0"
     ]
   },
   "packageFolders": {
-    "C:\\Users\\Гоша и Аня\\.nuget\\packages\\": {}
+    "C:\\Users\\Анна\\.nuget\\packages\\": {}
   },
   "project": {
-    "version": "1.0.4",
+    "version": "1.0.5",
     "restore": {
-      "projectUniqueName": "C:\\Users\\Гоша и Аня\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj",
+      "projectUniqueName": "C:\\Users\\Анна\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj",
       "projectName": "Regression",
-      "projectPath": "C:\\Users\\Гоша и Аня\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj",
-      "packagesPath": "C:\\Users\\Гоша и Аня\\.nuget\\packages\\",
-      "outputPath": "C:\\Users\\Гоша и Аня\\RegressionLibrary\\ClassLibraryMath\\obj\\",
+      "projectPath": "C:\\Users\\Анна\\RegressionLibrary\\ClassLibraryMath\\Regression.csproj",
+      "packagesPath": "C:\\Users\\Анна\\.nuget\\packages\\",
+      "outputPath": "C:\\Users\\Анна\\RegressionLibrary\\ClassLibraryMath\\obj\\",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "C:\\Users\\Гоша и Аня\\AppData\\Roaming\\NuGet\\NuGet.Config",
+        "C:\\Users\\Анна\\AppData\\Roaming\\NuGet\\NuGet.Config",
         "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
       ],
       "originalTargetFrameworks": [
-        "net6.0"
+        "net8.0"
       ],
       "sources": {
         "C:\\Program Files (x86)\\Microsoft SDKs\\NuGetPackages\\": {},
+        "C:\\Program Files\\dotnet\\library-packs": {},
         "https://api.nuget.org/v3/index.json": {}
       },
       "frameworks": {
-        "net6.0": {
-          "targetAlias": "net6.0",
+        "net8.0": {
+          "targetAlias": "net8.0",
           "projectReferences": {}
         }
       },
@@ -303,8 +304,8 @@
       }
     },
     "frameworks": {
-      "net6.0": {
-        "targetAlias": "net6.0",
+      "net8.0": {
+        "targetAlias": "net8.0",
         "dependencies": {
           "MathNet.Symbolics": {
             "target": "Package",
@@ -327,7 +328,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.201\\RuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "C:\\Program Files\\dotnet\\sdk\\8.0.400/PortableRuntimeIdentifierGraph.json"
       }
     }
   }

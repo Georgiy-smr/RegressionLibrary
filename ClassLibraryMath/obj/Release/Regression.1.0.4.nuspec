@@ -11,7 +11,7 @@
     <readme>Descriptions.md</readme>
     <description>The library for working with regression analysis from Alfapascal</description>
     <tags>Regression, Linear, Spline, AlphaPascal</tags>
-    <repository type="git" commit="c7c1e34f01870561e3a7ce2008c6aa8c3702081d" />
+    <repository type="git" commit="b9846991286940fe76bdad5e1fc7f1fdb4297819" />
     <dependencies>
       <group targetFramework="net6.0">
         <dependency id="MathNet.Symbolics" version="0.25.0" exclude="Build,Analyzers" />
@@ -19,8 +19,8 @@
     </dependencies>
   </metadata>
   <files>
-    <file src="C:\Users\Гоша и Аня\RegressionLibrary\ClassLibraryMath\bin\Release\net6.0\Regression.dll" target="lib\net6.0\Regression.dll" />
-    <file src="C:\Users\Гоша и Аня\RegressionLibrary\ClassLibraryMath\bin\Release\Descriptions.md" target="\Descriptions.md" />
-    <file src="C:\Users\Гоша и Аня\RegressionLibrary\ClassLibraryMath\bin\Release\net6.0\Assets\icon-ap.png" target="\icon-ap.png" />
+    <file src="C:\Users\Анна\RegressionLibrary\ClassLibraryMath\bin\Release\net6.0\Regression.dll" target="lib\net6.0\Regression.dll" />
+    <file src="C:\Users\Анна\RegressionLibrary\ClassLibraryMath\bin\Release\Descriptions.md" target="\Descriptions.md" />
+    <file src="C:\Users\Анна\RegressionLibrary\ClassLibraryMath\bin\Release\net6.0\Assets\icon-ap.png" target="\icon-ap.png" />
   </files>
 </package>

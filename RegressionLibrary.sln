@@ -3,7 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Regression", "ClassLibraryMath\Regression.csproj", "{9126B0B3-355D-4638-9730-0142BC1A5D77}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Regression", "ClassLibraryMath\Regression.csproj", "{9126B0B3-355D-4638-9730-0142BC1A5D77}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SolversTests", "SolversTests\SolversTests.csproj", "{C891B460-56B7-48F0-91D5-A16145F2D122}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +17,10 @@ Global
 		{9126B0B3-355D-4638-9730-0142BC1A5D77}.Debug|Any CPU.Build.0 = Release|Any CPU
 		{9126B0B3-355D-4638-9730-0142BC1A5D77}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9126B0B3-355D-4638-9730-0142BC1A5D77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C891B460-56B7-48F0-91D5-A16145F2D122}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C891B460-56B7-48F0-91D5-A16145F2D122}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C891B460-56B7-48F0-91D5-A16145F2D122}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C891B460-56B7-48F0-91D5-A16145F2D122}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

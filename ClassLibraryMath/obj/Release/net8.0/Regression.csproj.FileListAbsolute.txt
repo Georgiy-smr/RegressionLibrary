@@ -1,0 +1,13 @@
+C:\Users\Анна\RegressionLibrary\ClassLibraryMath\bin\Release\net8.0\Regression.deps.json
+C:\Users\Анна\RegressionLibrary\ClassLibraryMath\bin\Release\net8.0\Regression.dll
+C:\Users\Анна\RegressionLibrary\ClassLibraryMath\bin\Release\net8.0\Regression.pdb
+C:\Users\Анна\RegressionLibrary\ClassLibraryMath\obj\Release\net8.0\Regression.csproj.AssemblyReference.cache
+C:\Users\Анна\RegressionLibrary\ClassLibraryMath\obj\Release\net8.0\Regression.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Анна\RegressionLibrary\ClassLibraryMath\obj\Release\net8.0\Regression.AssemblyInfoInputs.cache
+C:\Users\Анна\RegressionLibrary\ClassLibraryMath\obj\Release\net8.0\Regression.AssemblyInfo.cs
+C:\Users\Анна\RegressionLibrary\ClassLibraryMath\obj\Release\net8.0\Regression.csproj.CoreCompileInputs.cache
+C:\Users\Анна\RegressionLibrary\ClassLibraryMath\obj\Release\net8.0\Regression.sourcelink.json
+C:\Users\Анна\RegressionLibrary\ClassLibraryMath\obj\Release\net8.0\Regression.dll
+C:\Users\Анна\RegressionLibrary\ClassLibraryMath\obj\Release\net8.0\refint\Regression.dll
+C:\Users\Анна\RegressionLibrary\ClassLibraryMath\obj\Release\net8.0\Regression.pdb
+C:\Users\Анна\RegressionLibrary\ClassLibraryMath\obj\Release\net8.0\ref\Regression.dll
