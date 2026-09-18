@@ -87,8 +87,41 @@ public class ApproximationServiceTests223
     };
 
     /// <summary>
-    /// mathNetError=0.0430808567629839;  "a0 161409,05113804847;a1 739,333203478237;a2 1,1290076313509756;a3 -37322,97747918869;a4 2391,9073739582336;a5 -171,14624877819676;a6 10,972532569607008;a7 -0,26158640274216516;a8 0,01677746155826782;a9 -43,38270883070656;a10 -0,1990254701014542;a11 -0,00030433854536385794;a12 0,000574795283533706;a13 -0,00013327812897499284;a14 8,550714420897579E-06;a15 -1,5511777889159928E-07"
-    /// gausError=0.22373078245273348;  "a0 505775,06827121763;a1 2318,1218505178367;a2 3,541600059190415;a3 -73092,88912280153;a4 2626,4660369192025;a5 -335,0419673345773;a6 12,036441461540273;a7 -0,5118935111310263;a8 0,018385728906721244;a9 -23,914352361248177;a10 -0,10948934889237993;a11 -0,00016708589956332197;a12 0,001803648982314731;a13 -0,0002606972464241017;a14 9,360950778093841E-06;a15 -8,498894543825043E-08"
+    /// BUG: this test fails because SolverMathNet and Solver (Gaus) both produce coefficients
+    /// with a max residual error far above the 0.011 tolerance for the 223 dataset, while the
+    /// independently computed MathCad reference coefficients (MathCadCoefficients field) do not.
+    /// Tracked in issue #5.
+    ///
+    /// GetMax() error per source:
+    ///   mathNetError = 0.0430808567629839   (FAIL, tolerance 0.011)
+    ///   gausError    = 0.22373078245273348  (FAIL, tolerance 0.011)
+    ///   mathCadError = 0.001508223661289776 (PASS, tolerance 0.011)
+    ///
+    /// Coefficient comparison (idx = term in CreateThirdOrderPolynomialExpression, a0 = constant):
+    ///
+    /// idx    MathNet                    Gaus                       MathCad
+    /// a0     161409.05113804847         505775.06827121763         18388.907500224206
+    /// a1     739.333203478237           2318.1218505178367         83.3267863173459
+    /// a2     1.1290076313509756         3.541600059190415          0.12606686160785655
+    /// a3     -37322.97747918869         -73092.88912280153         -737.8973304145301
+    /// a4     2391.9073739582336         2626.4660369192025         -10.096348502901922
+    /// a5     -171.14624877819676        -335.0419673345773         -3.324339181498154
+    /// a6     10.972532569607008         12.036441461540273         -0.046629299470129
+    /// a7     -0.26158640274216516       -0.5118935111310263        -0.00499059714817943
+    /// a8     0.01677746155826782        0.018385728906721244       -0.0000717526899727
+    /// a9     -43.38270883070656         -23.914352361248177        0.24378911381962476
+    /// a10    -0.1990254701014542        -0.10948934889237993       0.00112189388381146
+    /// a11    -0.00030433854536385794    -0.00016708589956332197    0.00000172074630973
+    /// a12    0.000574795283533706       0.001803648982314731       0.00006370361954318
+    /// a13    -0.00013327812897499284    -0.0002606972464241017     -0.00000250856109145
+    /// a14    8.550714420897579E-06      9.360950778093841E-06      -0.00000003678932996
+    /// a15    -1.5511777889159928E-07    -8.498894543825043E-08     0.00000000087964539
+    ///
+    /// Note the qualitative difference, not just magnitude: MathNet/Gaus put a0..a3 in the tens
+    /// to hundreds of thousands while Y ranges only 0..110, and a4's sign even flips between
+    /// MathCad (negative) and MathNet/Gaus (positive) — this smells like catastrophic
+    /// cancellation from an ill-conditioned normal-equations matrix, not just "needs more
+    /// precision". See issue #5 for the working hypothesis and suggested next steps.
     /// </summary>
     [Fact]
     public void MaxErrorIsBelowTolerance()
