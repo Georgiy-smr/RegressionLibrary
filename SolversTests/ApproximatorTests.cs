@@ -6,7 +6,7 @@ namespace SolversTests;
 public class ApproximatorTests
 {
     [Fact]
-    public void Test()
+    public void MaxErrorIsBelowTolerance()
     {
         int n = 5;
         int pow = 2;
@@ -17,6 +17,6 @@ public class ApproximatorTests
 
         var error = new ApproximationCalculationError(coeffs, x, y);
 
-        Assert.True(error.GetMax() > 0);
+        Assert.True(error.GetMax() < 0.5);
     }
 }
