@@ -52,9 +52,9 @@ public class ApproximationCalculationError
     public double GetMax()
     {
         if (_mode == Mode.TwoFactorRegression)
-            return _data!.Select(item => Math.Abs(item.Y - CalcTwoFactorValue(item, _coefficients))).Max();
+            return _data!.Select(item => Math.Abs(item.Y - new TwoFactorPolynomialValue(_coefficients, item).Value())).Max();
 
-        return _x!.Select((xi, i) => Math.Abs(_y![i] - CalcHornerValue(xi))).Max();
+        return _x!.Select((xi, i) => Math.Abs(_y![i] - new HornerPolynomialValue(_coefficients, xi).Value())).Max();
     }
 
     /// <summary>
@@ -65,7 +65,7 @@ public class ApproximationCalculationError
         if (_mode != Mode.TwoFactorRegression)
             throw new InvalidOperationException($"{nameof(GetCurrent)}(DataTwoFact, double) is only available in two-factor regression mode.");
 
-        return Math.Abs(expectedValue - CalcTwoFactorValue(data, _coefficients));
+        return Math.Abs(expectedValue - new TwoFactorPolynomialValue(_coefficients, data).Value());
     }
 
     /// <summary>
@@ -76,120 +76,6 @@ public class ApproximationCalculationError
         if (_mode != Mode.SingleVariableApproximation)
             throw new InvalidOperationException($"{nameof(GetCurrent)}(double, double) is only available in single-variable approximation mode.");
 
-        return Math.Abs(expectedValue - CalcHornerValue(x));
-    }
-
-    private double CalcHornerValue(double x)
-    {
-        double result = 0;
-        for (int i = 0; i < _coefficients.Length; i++)
-            result += _coefficients[i] * Math.Pow(x, _coefficients.Length - (i + 1));
-
-        return result;
-    }
-
-    private static double CalcTwoFactorValue(DataTwoFact data, double[] coeffs)
-    {
-        double res = 0;
-
-        if (coeffs.Length == 16)
-        {
-            for (int i = 0; i < coeffs.Length; i++)
-            {
-                switch (i)
-                {
-                    case 0:
-                        res += coeffs[i];
-                        break;
-                    case 1:
-                        res += coeffs[i] * data.X2;
-                        break;
-                    case 2:
-                        res += coeffs[i] * data.X2 * data.X2;
-                        break;
-                    case 3:
-                        res += coeffs[i] * data.X1;
-                        break;
-                    case 4:
-                        res += coeffs[i] * data.X1 * data.X1;
-                        break;
-                    case 5:
-                        res += coeffs[i] * data.X1 * data.X2;
-                        break;
-                    case 6:
-                        res += coeffs[i] * data.X2 * data.X1 * data.X1;
-                        break;
-                    case 7:
-                        res += coeffs[i] * data.X2 * data.X2 * data.X1;
-                        break;
-                    case 8:
-                        res += coeffs[i] * data.X1 * data.X1 * data.X2 * data.X2;
-                        break;
-                    case 9:
-                        res += coeffs[i] * data.X1 * data.X1 * data.X1;
-                        break;
-                    case 10:
-                        res += coeffs[i] * data.X2 * data.X1 * data.X1 * data.X1;
-                        break;
-                    case 11:
-                        res += coeffs[i] * data.X2 * data.X2 * data.X1 * data.X1 * data.X1;
-                        break;
-                    case 12:
-                        res += coeffs[i] * data.X2 * data.X2 * data.X2;
-                        break;
-                    case 13:
-                        res += coeffs[i] * data.X2 * data.X2 * data.X2 * data.X1;
-                        break;
-                    case 14:
-                        res += coeffs[i] * data.X2 * data.X2 * data.X2 * data.X1 * data.X1;
-                        break;
-                    case 15:
-                        res += coeffs[i] * data.X2 * data.X2 * data.X2 * data.X1 * data.X1 * data.X1;
-                        break;
-                }
-            }
-        }
-        else if (coeffs.Length == 9)
-        {
-            for (int i = 0; i < coeffs.Length; i++)
-            {
-                switch (i)
-                {
-                    case 0:
-                        res += coeffs[i];
-                        break;
-                    case 1:
-                        res += coeffs[i] * data.X2;
-                        break;
-                    case 2:
-                        res += coeffs[i] * data.X2 * data.X2;
-                        break;
-                    case 3:
-                        res += coeffs[i] * data.X1;
-                        break;
-                    case 4:
-                        res += coeffs[i] * data.X1 * data.X1;
-                        break;
-                    case 5:
-                        res += coeffs[i] * data.X1 * data.X2;
-                        break;
-                    case 6:
-                        res += coeffs[i] * data.X2 * data.X1 * data.X1;
-                        break;
-                    case 7:
-                        res += coeffs[i] * data.X2 * data.X2 * data.X1;
-                        break;
-                    case 8:
-                        res += coeffs[i] * data.X1 * data.X1 * data.X2 * data.X2;
-                        break;
-                }
-            }
-        }
-        else
-        {
-            throw new NotSupportedException($"Unsupported coefficient array length: {coeffs.Length}. Only 16 and 9 are supported.");
-        }
-
-        return res;
+        return Math.Abs(expectedValue - new HornerPolynomialValue(_coefficients, x).Value());
     }
 }
