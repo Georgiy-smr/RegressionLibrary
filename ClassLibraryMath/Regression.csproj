@@ -14,11 +14,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="bin\Release\Descriptions.md">
+    <None Include="Packaging\Descriptions.md">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
-    <None Include="bin\Release\net6.0\Assets\icon-ap.png">
+    <None Include="Packaging\icon-ap.png">
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
