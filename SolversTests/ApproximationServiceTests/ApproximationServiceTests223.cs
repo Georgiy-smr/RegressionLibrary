@@ -77,11 +77,32 @@ public class ApproximationServiceTests223
         var pressurePolynimial = _data.CreateThirdOrderPolynomialExpression();
         var mathNet = sutMathNet.GetValues(pressurePolynimial);
         var gause = sutGaus.GetValues(pressurePolynimial);
+        var mathCad = new double[]
+        {
+            18388.907500224206,
+            83.3267863173459,
+            0.12606686160785655,
+            -737.8973304145301,
+            -10.096348502901922,
+            -3.324339181498154,
+            -0.046629299470129,
+            -0.00499059714817943,
+            -0.0000717526899727,
+            0.24378911381962476,
+            0.00112189388381146,
+            0.00000172074630973,
+            0.00006370361954318,
+            -0.00000250856109145,
+            -0.00000003678932996,
+            0.00000000087964539
+        };
         string s = string.Join(";", mathNet.Select((x, i) => $"a{i} {x}"));
         string g = string.Join(";", gause.Select((x, i) => $"a{i} {x}"));
         var mathNetError = new ApproximationCalculationError(mathNet, _data).GetMax();
         var gausError = new ApproximationCalculationError(gause, _data).GetMax();
+        var mathCadError = new ApproximationCalculationError(mathCad, _data).GetMax();
         Assert.True(mathNetError < 0.011);
         Assert.True(gausError < 0.011);
+        Assert.True(mathCadError < 0.011);
     }
 }
