@@ -66,7 +66,7 @@ public class ApproximationServiceTests
         new DataTwoFact() {X1=44.93978 ,X2=92.90000, Y=120.0048}
     };
     [Fact]
-    public void Test()
+    public void MaxErrorIsBelowTolerance()
     {
         ApproximationService sutMathNet = new ApproximationService(new SolverMathNet(), new RowParser(), new DerivativeCalculator());
         ApproximationService sutGaus = new ApproximationService(new Solver(), new RowParser(), new DerivativeCalculator());
@@ -81,7 +81,7 @@ public class ApproximationServiceTests
         var mathNetError = new ApproximationCalculationError(mathNet, _data);
         var gausError = new ApproximationCalculationError(gause, _data);
 
-        Assert.True(mathNetError.GetMax() > 0);
-        Assert.True(gausError.GetMax() > 0);
+        Assert.True(mathNetError.GetMax() < 0.003);
+        Assert.True(gausError.GetMax() < 0.003);
     }
 }
