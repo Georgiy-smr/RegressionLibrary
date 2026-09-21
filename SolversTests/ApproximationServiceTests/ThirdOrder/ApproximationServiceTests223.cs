@@ -97,19 +97,19 @@ public class ApproximationServiceTests223
     /// data; mathNetError/gausError below assert against the old path's actually observed
     /// error, not a tolerance it was ever designed to meet.
     ///
-    /// The fix is LeastSquaresApproximationServiceThirdOrder (see leastSquaresError below),
-    /// which fits the identical a0..a15 basis via least squares on a centered/scaled design
-    /// matrix instead of normal equations, and is what issue #5 considers "fixed".
+    /// The fix is PolynomialLeastSquaresSolver(ThirdOrderBasisExponents) (see leastSquaresError
+    /// below), which fits the identical a0..a15 basis via least squares on a centered/scaled
+    /// design matrix instead of normal equations, and is what issue #5 considers "fixed".
     ///
     /// GetMax() error per source:
     ///   mathNetError      = 0.0430808567629839   (old path, FAIL vs 0.011, honest bound: 0.05)
     ///   gausError         = 0.22373078245273348  (old path, FAIL vs 0.011, honest bound: 0.25)
     ///   mathCadError      = 0.001508223661289776 (independent reference, PASS, tolerance 0.011)
-    ///   leastSquaresError = 0.0015240687579307632 (LeastSquaresApproximationServiceThirdOrder, PASS, tolerance 0.011)
+    ///   leastSquaresError = 0.0015240687579307632 (PolynomialLeastSquaresSolver(ThirdOrderBasisExponents), PASS, tolerance 0.011)
     ///
     /// Coefficient comparison (idx = term in CreateThirdOrderPolynomialExpression, a0 = constant):
     ///
-    /// idx    MathNet (old)              Gaus (old)                 MathCad                    LeastSquaresApproximationServiceThirdOrder (new)
+    /// idx    MathNet (old)              Gaus (old)                 MathCad                    PolynomialLeastSquaresSolver (new)
     /// a0     161409.05113804847         505775.06827121763         18388.907500224206         18388.907471424587
     /// a1     739.333203478237           2318.1218505178367         83.3267863173459           83.326786185269739
     /// a2     1.1290076313509756         3.541600059190415          0.12606686160785655        0.12606686140596482
@@ -130,8 +130,8 @@ public class ApproximationServiceTests223
     /// Note the qualitative difference, not just magnitude: MathNet/Gaus (old path) put a0..a3
     /// in the tens to hundreds of thousands while Y ranges only 0..110, and a4's sign even
     /// flips between MathCad (negative) and MathNet/Gaus (positive) — catastrophic cancellation
-    /// from the ill-conditioned normal-equations matrix. LeastSquaresApproximationServiceThirdOrder
-    /// matches the MathCad reference to ~6 significant digits by avoiding that matrix entirely.
+    /// from the ill-conditioned normal-equations matrix. PolynomialLeastSquaresSolver matches
+    /// the MathCad reference to ~6 significant digits by avoiding that matrix entirely.
     /// </summary>
     [Fact]
     public void MaxErrorIsBelowTolerance()
@@ -148,7 +148,7 @@ public class ApproximationServiceTests223
         var gausError = new ApproximationCalculationError(gause, _data).GetMax();
         var mathCadError = new ApproximationCalculationError(mathCad, _data).GetMax();
 
-        var sutLeastSquares = new LeastSquaresApproximationServiceThirdOrder();
+        var sutLeastSquares = new PolynomialLeastSquaresSolver(new ThirdOrderBasisExponents());
         var leastSquares = sutLeastSquares.GetValues(_data);
         var leastSquaresError = new ApproximationCalculationError(leastSquares, _data).GetMax();
 
