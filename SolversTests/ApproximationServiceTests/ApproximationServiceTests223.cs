@@ -97,15 +97,15 @@ public class ApproximationServiceTests223
     /// data; mathNetError/gausError below assert against the old path's actually observed
     /// error, not a tolerance it was ever designed to meet.
     ///
-    /// The fix is LeastSquaresApproximationServiceThirdOrder (see newServiceError below), which
-    /// fits the identical a0..a15 basis via least squares on a centered/scaled design matrix
-    /// instead of normal equations, and is what issue #5 considers "fixed".
+    /// The fix is LeastSquaresApproximationServiceThirdOrder (see leastSquaresError below),
+    /// which fits the identical a0..a15 basis via least squares on a centered/scaled design
+    /// matrix instead of normal equations, and is what issue #5 considers "fixed".
     ///
     /// GetMax() error per source:
-    ///   mathNetError    = 0.0430808567629839   (old path, FAIL vs 0.011, honest bound: 0.05)
-    ///   gausError       = 0.22373078245273348  (old path, FAIL vs 0.011, honest bound: 0.25)
-    ///   mathCadError    = 0.001508223661289776 (independent reference, PASS, tolerance 0.011)
-    ///   newServiceError = 0.0015240687579307632 (LeastSquaresApproximationServiceThirdOrder, PASS, tolerance 0.011)
+    ///   mathNetError      = 0.0430808567629839   (old path, FAIL vs 0.011, honest bound: 0.05)
+    ///   gausError         = 0.22373078245273348  (old path, FAIL vs 0.011, honest bound: 0.25)
+    ///   mathCadError      = 0.001508223661289776 (independent reference, PASS, tolerance 0.011)
+    ///   leastSquaresError = 0.0015240687579307632 (LeastSquaresApproximationServiceThirdOrder, PASS, tolerance 0.011)
     ///
     /// Coefficient comparison (idx = term in CreateThirdOrderPolynomialExpression, a0 = constant):
     ///
@@ -148,9 +148,9 @@ public class ApproximationServiceTests223
         var gausError = new ApproximationCalculationError(gause, _data).GetMax();
         var mathCadError = new ApproximationCalculationError(mathCad, _data).GetMax();
 
-        var newService = new LeastSquaresApproximationServiceThirdOrder();
-        var newServiceValues = newService.GetValues(_data);
-        var newServiceError = new ApproximationCalculationError(newServiceValues, _data).GetMax();
+        var sutLeastSquares = new LeastSquaresApproximationServiceThirdOrder();
+        var leastSquares = sutLeastSquares.GetValues(_data);
+        var leastSquaresError = new ApproximationCalculationError(leastSquares, _data).GetMax();
 
         // Old path (ApproximationService/ExpressionCreator, via SolverMathNet/Solver): honest
         // bounds reflecting its actually observed, ill-conditioning-driven error on this
@@ -162,6 +162,6 @@ public class ApproximationServiceTests223
 
         // This is the actual pass/fail criterion for issue #5: the new, separate
         // least-squares path fits the same a0..a15 basis well within tolerance.
-        Assert.True(newServiceError < 0.011);
+        Assert.True(leastSquaresError < 0.011);
     }
 }
