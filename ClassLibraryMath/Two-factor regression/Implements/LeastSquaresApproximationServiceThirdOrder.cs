@@ -8,28 +8,8 @@ using System.Linq;
 
 namespace Regression.Two_factor_regression.Implements
 {
-    /// <summary>
-    /// Fits the same 16-term third-order two-factor polynomial as
-    /// ExpressionCreator.CreateThirdOrderPolynomialExpression (a0..a15 basis, see
-    /// TwoFactorPolynomialValue16), but through direct least squares on a design matrix
-    /// instead of symbolic differentiation and normal equations.
-    ///
-    /// Issue #5 / PR #6: ApproximationService.BuildMatrix forms the normal-equations matrix
-    /// XᵀX from raw, uncentered X1/X2 (e.g. X2 ~ -645..-663) raised up to the 3rd power, which
-    /// is catastrophically ill-conditioned (~1E+32, see ConditionNumberHypothesisTests) — a
-    /// direct double-precision solve on that matrix is expected to lose all significant
-    /// digits. This service avoids that by (1) centering and scaling X1/X2 before raising them
-    /// to high powers, which keeps every design-matrix column near unit magnitude, and (2)
-    /// solving the (still overdetermined) design matrix directly via QR rather than forming
-    /// XᵀX at all. The fitted centered-basis coefficients are then converted back into the
-    /// original a0..a15 basis symbolically (substitute the centering/scaling formulas and
-    /// collect coefficients of each raw monomial), so GetValues() returns coefficients that
-    /// TwoFactorPolynomialValue16 / ApproximationCalculationError can consume unchanged.
-    /// </summary>
     public class LeastSquaresApproximationServiceThirdOrder : ILeastSquaresRegressionService
     {
-        // (power of X1, power of X2) for each a0..a15 basis term, in the exact order defined by
-        // ExpressionCreator.CreateThirdOrderPolynomialExpression / TwoFactorPolynomialValue16.
         private static readonly (int PowerOfX1, int PowerOfX2)[] BasisExponents =
         {
             (0, 0), (0, 1), (0, 2), (1, 0), (2, 0), (1, 1), (2, 1), (1, 2),
@@ -79,13 +59,6 @@ namespace Regression.Two_factor_regression.Implements
             return term;
         }
 
-        /// <summary>
-        /// Substitutes x1c=(X1-mean1)/scale1, x2c=(X2-mean2)/scale2 into the fitted
-        /// centered-basis polynomial and reads off the coefficient of each raw a0..a15
-        /// monomial by repeated symbolic differentiation and evaluation at X1=X2=0 (the
-        /// standard Taylor-coefficient trick — valid here because the substituted expression
-        /// is itself a polynomial in X1, X2).
-        /// </summary>
         private static double[] ConvertToOriginalBasis(
             Vector<double> centeredCoefficients, double mean1, double scale1, double mean2, double scale2)
         {
