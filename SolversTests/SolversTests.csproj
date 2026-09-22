@@ -20,6 +20,10 @@
     <ProjectReference Include="..\ClassLibraryMath\Regression.csproj" />
   </ItemGroup>
 
+	<ItemGroup>
+        <Folder Include="SolversTests\ApproximationServiceTests\FourthOrder"/>
+	</ItemGroup>
+
   <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
