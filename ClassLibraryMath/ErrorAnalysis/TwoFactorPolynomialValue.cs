@@ -9,22 +9,17 @@ namespace Regression.ErrorAnalysis;
 public sealed class TwoFactorPolynomialValue : IPolynomialValue
 {
     private readonly IPolynomialValue _origin;
-
-    public TwoFactorPolynomialValue(double[] coefficients, DataTwoFact data)
-        : this(coefficients.Length switch
-        {
-            16 => (IPolynomialValue)new TwoFactorPolynomialValue16(coefficients, data),
-            9 => new TwoFactorPolynomialValue9(coefficients, data),
-            _ => throw new NotSupportedException(
-                $"Unsupported coefficient array length: {coefficients.Length}. Only 16 and 9 are supported.")
-        })
-    {
-    }
-
     private TwoFactorPolynomialValue(IPolynomialValue origin)
     {
         _origin = origin;
     }
-
+    public TwoFactorPolynomialValue(double[] coefficients, DataTwoFact data)
+        : this(coefficients.Length switch
+        {
+            16 => new TwoFactorPolynomialValue16(coefficients, data),
+            9 => new TwoFactorPolynomialValue9(coefficients, data),
+            _ => throw new NotSupportedException(
+                $"Unsupported coefficient array length: {coefficients.Length}. Only 16 and 9 are supported.")
+        }) { }
     public double Value() => _origin.Value();
 }
