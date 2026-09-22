@@ -2,10 +2,6 @@ using Regression.Two_factor_regression;
 
 namespace Regression.ErrorAnalysis;
 
-/// <summary>
-/// Two-factor fourth-order polynomial for the 25-coefficient form (full 5x5 grid of
-/// X1^i * X2^j terms, see FourthOrderBasisExponents).
-/// </summary>
 public sealed class TwoFactorPolynomialValue25 : IPolynomialValue
 {
     private readonly double[] _coefficients;
