@@ -22,9 +22,10 @@ Both implement `ISolverSystem`.
 ## Two-factor regression pipeline
 
 `DataTwoFact` (X1, X2, Y)
-→ `ExpressionCreator.CreateThirdOrderPolynomialExpression` builds a symbolic sum-of-squared-
-  residuals expression via MathNet.Symbolics (16 coefficients a0..a15; a 9-coefficient/2nd-order
-  variant is referenced elsewhere but not implemented here)
+→ `ExpressionCreator.CreateTwoOrder/ThirdOrder/FourthOrderPolynomialExpression` builds a
+  symbolic sum-of-squared-residuals expression via MathNet.Symbolics (9/16/25 coefficients). Term
+  order matches `Second/Third/FourthOrderBasisExponents`, and each lower order is a positional
+  prefix of the next (issue #15, locked by `BasisExponentsOrderTests`)
 → `DerivativeCalculator` differentiates it per coefficient
 → `ApproximationService.BuildMatrix` assembles the normal-equations matrices
 → `ISolverSystem.GetRoots` solves for the coefficients.
