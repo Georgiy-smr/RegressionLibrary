@@ -9,10 +9,11 @@ namespace SolversTests;
 /// instead of the third-order (16-coefficient) one, to test whether a higher-order model
 /// closes the tolerance gap described in issue #10.
 ///
-/// PASSES: GetMax() = 0.0023205898284857085, under the 0.003 tolerance (the third-order model
+/// PASSES: GetMax() = 0.0023217819213812163, under the 0.003 tolerance (the third-order model
 /// on the same dataset gets 0.0067532704376560559 — see FiveOriginal.cs). Going to fourth
 /// order closes the gap for this dataset; see issue #10 for whether that's the right fix or
-/// just curve-fits around a conditioning issue. See also
+/// just curve-fits around a conditioning issue. (Figures are with the issue #15 term order;
+/// the pre-#15 order gave 0.0023205898284857085 — same basis, permuted QR columns.) See also
 /// FiveOriginalLeaveOneSeriesOutCrossValidation.cs for whether it generalizes out-of-sample.
 /// </summary>
 public class FiveOriginalFourthOrder
