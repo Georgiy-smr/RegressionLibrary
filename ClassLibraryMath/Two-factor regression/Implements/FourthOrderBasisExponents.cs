@@ -8,11 +8,13 @@ namespace Regression.Two_factor_regression.Implements
     {
         private static readonly (int PowerOfX1, int PowerOfX2)[] Exponents =
         {
-            (0, 0), (0, 1), (0, 2), (0, 3), (0, 4),
-            (1, 0), (1, 1), (1, 2), (1, 3), (1, 4),
-            (2, 0), (2, 1), (2, 2), (2, 3), (2, 4),
-            (3, 0), (3, 1), (3, 2), (3, 3), (3, 4),
-            (4, 0), (4, 1), (4, 2), (4, 3), (4, 4),
+            // First 16 entries are ThirdOrderBasisExponents in the same order (whose first 9 are
+            // SecondOrderBasisExponents), so a lower-order coefficient array is a positional prefix.
+            (0, 0), (0, 1), (0, 2), (1, 0), (2, 0), (1, 1), (2, 1), (1, 2),
+            (2, 2), (3, 0), (3, 1), (3, 2), (0, 3), (1, 3), (2, 3), (3, 3),
+            (4, 0), (4, 1), (4, 2), (4, 3),
+            (0, 4), (1, 4), (2, 4), (3, 4),
+            (4, 4),
         };
 
         public IEnumerator<(int PowerOfX1, int PowerOfX2)> GetEnumerator()
