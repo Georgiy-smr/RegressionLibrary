@@ -30,6 +30,31 @@ Both implement `ISolverSystem`.
 → `ApproximationService.BuildMatrix` assembles the normal-equations matrices
 → `ISolverSystem.GetRoots` solves for the coefficients.
 
+That pipeline (`IRegressionAnalysisService` / `ApproximationService`) is the legacy path, kept
+untouched for backward compatibility.
+
+## Polynomial fit solvers (recommended path)
+
+`IPolynomialFitService.GetValues(IEnumerable<DataTwoFact>)` is the common contract for fitting a
+two-factor polynomial over an `IBasisExponents` (2nd/3rd/4th order, 9/16/25 coefficients),
+returning original-monomial coefficients in the basis's fixed order (which goes to sensor
+firmware as is). Downstream consumers build a list of
+`Func<List<DataTwoFact>, IEnumerable<double>>` variants from these solvers.
+
+- `PolynomialLeastSquaresSolver : ILeastSquaresRegressionService` (which inherits
+  `IPolynomialFitService` with no members of its own, so consumers of the published package keep
+  compiling) — minimizes the sum of squares. **Recommended default.** It generalizes better to
+  temperatures between calibration series.
+- `MinimaxPolynomialSolver : IPolynomialFitService` (deliberately not the least-squares
+  interface) — minimizes the max absolute error over the fitted points via Lawson IRLS
+  (`maxIterations` default 1000, `relativeTolerance` default 1e-6 over a 200-iteration window).
+  Lower in-sample `GetMax()`, but worse leave-one-series-out generalization, and it follows
+  noisy points. Use only when acceptance is checked strictly at the calibration points.
+  Numbers: `SolversTests\ApproximationServiceTests\ThirdOrder\MinimaxPolynomialSolverTests.cs`.
+- Both share the internal `CenteredPolynomialBasis` (mean/scale centering, design matrix,
+  symbolic conversion back to the original basis). The symbolic conversion is slow, so it runs
+  exactly once per fit. Never call it inside the minimax iteration loop.
+
 ## ApproximationCalculationError
 
 `Regression.ErrorAnalysis` namespace, `ClassLibraryMath\ErrorAnalysis\ApproximationCalculationError.cs`
