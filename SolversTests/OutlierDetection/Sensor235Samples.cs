@@ -3,7 +3,7 @@ using Regression.Two_factor_regression;
 namespace SolversTests;
 
 /// <summary>
-/// Sensor 235 (0–200 kPa): the 5 real isothermal series of
+/// Sensor 235: the 5 real isothermal series of
 /// <see cref="SeriesCountAnalysisData.FiveOriginal"/>, written out as 5 separate samples of
 /// 11 points each. X1 = pressure code, X2 = temperature code, Y = reference pressure.
 /// </summary>

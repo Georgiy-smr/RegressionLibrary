@@ -10,8 +10,7 @@ namespace SolversTests;
 public class SinglePointSearchTests
 {
     /// <summary>
-    /// τ converted to codes for this sample: 5·10⁻⁵ × 199.68 kPa ≈ 0.010 kPa, divided by the
-    /// characteristic's slope ≈ 3.29 kPa per code.
+    /// The detector's τ for this sample: 5·10⁻⁵ × code range 60.73 ≈ 0.003 codes.
     /// </summary>
     private const double CodeTolerance = 0.003;
 
