@@ -55,6 +55,57 @@ firmware as is). Downstream consumers build a list of
   symbolic conversion back to the original basis). The symbolic conversion is slow, so it runs
   exactly once per fit. Never call it inside the minimax iteration loop.
 
+## IsothermalSeriesOutlierDetector (issue #21)
+
+`Regression.OutlierDetection`, `ClassLibraryMath\OutlierDetection\` — finds mis-loaded points
+(wrong/forgotten dead weight) in **one isothermal series** of `DataTwoFact` (X1 = pressure code,
+Y = target pressure the loads are meant to reproduce, all Y on one scale; X2 ignored).
+
+Error model (clarified by the repo owner after the #21 spec, which had it the other way round):
+Y is taken as exact and goes into the model as recorded; a loading mistake reproduces a
+different pressure, so the error shows up in **X1** at an unchanged Y. Hence the detector fits
+the characteristic X1 = g(Y), 2nd degree, by QR on centered Y (no normal equations, no
+conversion back to the original basis, so not `PolynomialLeastSquaresSolver`), and searches
+every subset of up to min(4, n − 5) points for the smallest one whose removal leaves all code
+residuals ≤ τ while every removed point misses by > τ. Tests inject errors into X1.
+
+The constructor parameter is `accuracyClassPercent`, the sensor's accuracy class in % of range
+(default 0.01). τ is a metrological requirement set by the owner, not a number tuned on data:
+half the permissible error, reduced to the range, in codes:
+τ = (accuracyClassPercent / 100 / 2) × (Ymax − Ymin) × |Theil–Sen slope of X1 over Y|.
+The scale comes from Y because Y is exact and X1 contains the outliers: a gross end error changes
+the code range (X1[10] += 30 on 235 / 15 °C: −10%) but not τ. On clean data (Ymax − Ymin)·|s|
+equals the code range within 0.02%. Consequence, intended: a point off by more than half the
+permissible error is suspicious even if the cause is sensor noise, so a sensor whose noise is
+close to its requirement (e.g. colleague sample 4) gets flagged points. Fact: with class 0.01%
+all 15 real series are clean; the worst uses ~52% of τ (224 series 5).
+
+- Empty list = clean; all `Outlier` = unique minimal set (`CodeError` = X1 − g(Y), in codes);
+  all `AmbiguousPoint` = union of several equally good sets; `SeriesNotResolvableException`
+  (`MaxOutliers`, `Tolerance`) = too many errors, re-measure.
+- Don't replace the exhaustive search with "drop the largest residual and refit": least squares
+  smears an end-point error or a shifted tail over the series.
+- Unverifiable points: a kept point with leverage > `MaxLeverage` (0.9; hat-matrix diagonal of
+  the kept rows, from a thin QR) can't be checked by the rest of the series, because the curve
+  passes through it. The whole result then becomes `AmbiguousPoint` (union of the accepted sets'
+  removed points plus the unverifiable points), even at k = 0. An `Outlier` result only comes
+  from a unique accepted set with no unverifiable kept point. Max kept leverage in the real tests:
+  0.78 (235), 0.79 (223, 224), reached when a single error at point 9 is removed and point 10 is
+  left alone at the end.
+- Tests in `SolversTests\OutlierDetection\`: class = number of errors (`CleanSampleTests`,
+  `SinglePointSearchTests`, `TwoPointSearchTests`, plus `ExceptionTests`), method = sample
+  (`Sensor235At15C`, `Sensor223Series1`, …), `InlineData` = where and how big the error is, in
+  codes. Samples are visible in `Sensor235Samples` / `Sensor223Samples` / `Sensor224Samples`
+  (`Sensor223And224Data` is built from them). 0, 1 and 2 errors are tested on all 15 real
+  series (1 error: every position 0–10; 2 errors: 6 position pairs), plus the exception. Scope is
+  deliberately limited to that: more than 2 loading mistakes per series is rare.
+  `Synthetic\` (namespace `SolversTests.Synthetic`) holds hand-built unevenly spaced samples
+  (`SyntheticSamples`: MildlyUneven, VacuumWithGap, IsolatedEnd, IsolatedStart) with the same
+  class/method/row layout. They're kept apart from real data on purpose. On the isolated samples
+  the tests assert a safe result (`SafeResult.AssertSafe`): exact `Outlier`s or `AmbiguousPoint`s
+  covering every injected point. The owner wants tests this simple
+  and the new code without comments; add scenarios only when asked.
+
 ## ApproximationCalculationError
 
 `Regression.ErrorAnalysis` namespace, `ClassLibraryMath\ErrorAnalysis\ApproximationCalculationError.cs`
@@ -72,9 +123,10 @@ wrong-mode method throws `InvalidOperationException`.
 
 - `GausTests.cs` / `QRfactorized.cs` — test the raw solvers directly.
 - `SolversTests\ApproximationServiceTests\` — `ApproximationServiceTests.cs` (original dataset),
-  plus `ApproximationServiceTests223.cs` and `ApproximationServiceTests224.cs`, each a
-  self-contained class with its own `_data` field sourced from an Excel export
-  (`223.xlsx`/`224.xlsx`, Лист1, columns A/B/C = X1/X2/Y, rows 2-56), running the same
+  plus `ApproximationServiceTests223.cs` and `ApproximationServiceTests224.cs`, whose data lives in
+  `Sensor223And224Data`, concatenated from `Sensor223Samples` / `Sensor224Samples` (from Excel
+  exports `223.xlsx`/`224.xlsx`, Лист1, columns A/B/C = X1/X2/Y, rows 2-56; 5 series of 11
+  points each), running the same
   `MaxErrorIsBelowTolerance()`-style test. `PolynomialLeastSquaresSolver`'s `GetMax()` must be
   under 0.011 on both. The legacy `ApproximationService` path must also be under 0.011 on 224,
   but on 223 it is asserted against its observed error (see below).
@@ -97,7 +149,8 @@ either way.
   solver bug. The `SeriesCountAnalysis` tests document it, and the fourth-order
   leave-one-series-out test is intentionally red.
 - [#21](https://github.com/Georgiy-smr/RegressionLibrary/issues/21): `IsothermalSeriesOutlierDetector`
-  for mis-loaded calibration points (spec in the issue).
+  is implemented (see above). Still open: whether to change the algorithm or the spec for the
+  ~10τ limit (wrong `Outlier` sets on unevenly spaced series).
 
 ## Workflow conventions observed in this repo's history
 
