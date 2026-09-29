@@ -1,4 +1,5 @@
 using MathNet.Numerics.LinearAlgebra;
+using MathNet.Numerics.LinearAlgebra.Factorization;
 using MathNet.Numerics.LinearRegression;
 using Regression.Two_factor_regression;
 
@@ -9,6 +10,7 @@ public class IsothermalSeriesOutlierDetector
     private const int Degree = 2;
     private const int MaxOutliersCap = 4;
     private const int MinimumPoints = Degree + 3;
+    private const double MaxLeverage = 0.9;
 
     private readonly double _relativeTolerance;
 
@@ -38,28 +40,42 @@ public class IsothermalSeriesOutlierDetector
 
         for (var k = 0; k <= maxOutliers; k++)
         {
-            var accepted = new List<(int[] Removed, double[] Residuals)>();
+            var accepted = new List<(int[] Removed, double[] Residuals, int[] Unverifiable)>();
             foreach (var removed in Combinations(n, k))
             {
                 var residuals = ResidualsWithout(removed, vandermonde, codes, points);
                 if (residuals is not null && IsAccepted(removed, residuals, tolerance))
-                    accepted.Add((removed, residuals));
+                    accepted.Add((removed, residuals, Unverifiable(removed, vandermonde)));
             }
 
-            if (accepted.Count == 1)
+            if (accepted.Count == 0)
+                continue;
+
+            if (accepted.Count == 1 && accepted[0].Unverifiable.Length == 0)
             {
-                var (removed, residuals) = accepted[0];
+                var (removed, residuals, _) = accepted[0];
                 return removed.Select(i => (SuspiciousPoint)new Outlier(i, points[i], residuals[i])).ToList();
             }
-            if (accepted.Count > 1)
-            {
-                return accepted.SelectMany(a => a.Removed).Distinct().OrderBy(i => i)
-                    .Select(i => (SuspiciousPoint)new AmbiguousPoint(i, points[i])).ToList();
-            }
+
+            return accepted.SelectMany(a => a.Removed.Concat(a.Unverifiable)).Distinct().OrderBy(i => i)
+                .Select(i => (SuspiciousPoint)new AmbiguousPoint(i, points[i])).ToList();
         }
 
         throw new SeriesNotResolvableException(maxOutliers, tolerance);
     }
+
+    private static int[] Unverifiable(int[] removed, Matrix<double> vandermonde)
+    {
+        var kept = KeptIndices(removed, vandermonde.RowCount);
+        var q = KeptRows(kept, vandermonde).QR(QRMethod.Thin).Q;
+        return kept.Where((_, row) => q.Row(row).DotProduct(q.Row(row)) > MaxLeverage).ToArray();
+    }
+
+    private static int[] KeptIndices(int[] removed, int count)
+        => Enumerable.Range(0, count).Where(i => Array.IndexOf(removed, i) < 0).ToArray();
+
+    private static Matrix<double> KeptRows(int[] kept, Matrix<double> vandermonde)
+        => Matrix<double>.Build.Dense(kept.Length, Degree + 1, (row, col) => vandermonde[kept[row], col]);
 
     private static double TheilSenSlope(DataTwoFact[] points)
     {
@@ -87,11 +103,10 @@ public class IsothermalSeriesOutlierDetector
 
     private static double[]? ResidualsWithout(int[] removed, Matrix<double> vandermonde, Vector<double> codes, DataTwoFact[] points)
     {
-        var kept = Enumerable.Range(0, points.Length).Where(i => Array.IndexOf(removed, i) < 0).ToArray();
+        var kept = KeptIndices(removed, points.Length);
         if (kept.Select(i => points[i].Y).Distinct().Count() <= Degree) return null;
 
-        var x = Matrix<double>.Build.Dense(kept.Length, Degree + 1, (row, col) => vandermonde[kept[row], col]);
-        var coefficients = MultipleRegression.QR(x, Vector<double>.Build.Dense(kept.Length, row => codes[kept[row]]));
+        var coefficients = MultipleRegression.QR(KeptRows(kept, vandermonde), Vector<double>.Build.Dense(kept.Length, row => codes[kept[row]]));
         return (codes - vandermonde * coefficients).ToArray();
     }
 

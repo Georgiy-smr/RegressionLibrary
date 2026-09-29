@@ -77,6 +77,16 @@ spread apart); 6 errors → exception. Up to 4 errors are supported by
 the algorithm, but more than 2 are deliberately not tested, because an operator rarely makes more
 than two loading mistakes in one series.
 
-**Known limit.** On unevenly spaced series, an isolated end point has leverage close to 1: the
-curve bends to reach it and absorbs its own error, so the detector can return a confident but wrong
-`Outlier` set.
+**Points the others can't verify.** On an unevenly spaced series, a point far from the others
+(e.g. the last point on another reference gauge, or a single deep vacuum point) has leverage close
+to 1 in the 2nd-degree fit: the curve passes through it whatever its value, so the rest of the
+series cannot check it. If any point kept in the fit has leverage > 0.9, the whole result becomes
+`AmbiguousPoint`, and that point is always among them, even for an otherwise clean series. If
+the isolated point is itself the removed outlier, the `Outlier` result stands. On the real series
+the largest leverage of a kept point is 0.78 (235) and 0.79 (223, 224), across the clean, 1-error and
+2-error tests.
+
+**Synthetic tests.** Four hand-built unevenly spaced samples (mildly uneven, vacuum with a gap,
+isolated end point, isolated start point) are tested separately from the real data: 0, 1 and 2
+errors. On the isolated samples, the result is always safe: either exactly the injected
+`Outlier`s, or `AmbiguousPoint`s that include every injected point.

@@ -81,15 +81,25 @@ default is 1.9× the worst series.
   (`MaxOutliers`, `Tolerance`) = too many errors, re-measure.
 - Don't replace the exhaustive search with "drop the largest residual and refit": least squares
   smears an end-point error or a shifted tail over the series.
-- Known limit (separate follow-up, not solved): on unevenly spaced series an isolated end point
-  has leverage ≈ 1 and can absorb its own error, giving a confident but wrong `Outlier` set.
+- Unverifiable points: a kept point with leverage > `MaxLeverage` (0.9; hat-matrix diagonal of
+  the kept rows, from a thin QR) can't be checked by the rest of the series, because the curve
+  passes through it. The whole result then becomes `AmbiguousPoint` (union of the accepted sets'
+  removed points plus the unverifiable points), even at k = 0. An `Outlier` result only comes
+  from a unique accepted set with no unverifiable kept point. Max kept leverage in the real tests:
+  0.78 (235), 0.79 (223, 224), reached when a single error at point 9 is removed and point 10 is
+  left alone at the end.
 - Tests in `SolversTests\OutlierDetection\`: class = number of errors (`CleanSampleTests`,
   `SinglePointSearchTests`, `TwoPointSearchTests`, plus `ExceptionTests`), method = sample
   (`Sensor235At15C`, `Sensor223Series1`, …), `InlineData` = where and how big the error is, in
   codes. Samples are visible in `Sensor235Samples` / `Sensor223Samples` / `Sensor224Samples`
   (`Sensor223And224Data` is built from them). 0, 1 and 2 errors are tested on all 15 real
   series (1 error: every position 0–10; 2 errors: 6 position pairs), plus the exception. Scope is
-  deliberately limited to that: more than 2 loading mistakes per series is rare. The owner wants tests this simple
+  deliberately limited to that: more than 2 loading mistakes per series is rare.
+  `Synthetic\` (namespace `SolversTests.Synthetic`) holds hand-built unevenly spaced samples
+  (`SyntheticSamples`: MildlyUneven, VacuumWithGap, IsolatedEnd, IsolatedStart) with the same
+  class/method/row layout. They're kept apart from real data on purpose. On the isolated samples
+  the tests assert a safe result (`SafeResult.AssertSafe`): exact `Outlier`s or `AmbiguousPoint`s
+  covering every injected point. The owner wants tests this simple
   and the new code without comments; add scenarios only when asked.
 
 ## ApproximationCalculationError
