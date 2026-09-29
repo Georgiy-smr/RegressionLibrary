@@ -1,4 +1,5 @@
 using Regression.OutlierDetection;
+using Regression.Two_factor_regression;
 
 namespace SolversTests;
 
@@ -7,19 +8,6 @@ public class SinglePointSearchTests
     private const double CodeTolerance = 0.003;
 
     private readonly IsothermalSeriesOutlierDetector _detector = new();
-
-    [Theory]
-    [InlineData(0)]
-    [InlineData(1)]
-    [InlineData(2)]
-    [InlineData(3)]
-    [InlineData(4)]
-    public void CleanSampleHasNoSuspiciousPoints(int sample)
-    {
-        var result = _detector.GetSuspiciousPoints(Sensor235Samples.All[sample]);
-
-        Assert.Empty(result);
-    }
 
     [Theory]
     [InlineData(0, 0.15)]
@@ -33,9 +21,29 @@ public class SinglePointSearchTests
     [InlineData(8, 0.15)]
     [InlineData(9, -0.15)]
     [InlineData(10, 0.05)]
-    public void PointWithCodeErrorIsFound(int index, double codeError)
+    public void Sensor235At15C(int index, double codeError) => AssertFound(Sensor235Samples.At15C, index, codeError);
+
+    [Theory]
+    [InlineData(0, 0.05)]
+    [InlineData(0, -0.15)]
+    [InlineData(5, -0.05)]
+    [InlineData(5, 0.15)]
+    [InlineData(10, 0.05)]
+    [InlineData(10, -0.15)]
+    public void Sensor223Series1(int index, double codeError) => AssertFound(Sensor223Samples.Series1, index, codeError);
+
+    [Theory]
+    [InlineData(0, 0.05)]
+    [InlineData(0, -0.15)]
+    [InlineData(5, -0.05)]
+    [InlineData(5, 0.15)]
+    [InlineData(10, 0.05)]
+    [InlineData(10, -0.15)]
+    public void Sensor224Series1(int index, double codeError) => AssertFound(Sensor224Samples.Series1, index, codeError);
+
+    private void AssertFound(DataTwoFact[] sample, int index, double codeError)
     {
-        var points = Sensor235Samples.At15C.ToArray();
+        var points = sample.ToArray();
         points[index] = points[index] with { X1 = points[index].X1 + codeError };
 
         var result = _detector.GetSuspiciousPoints(points);

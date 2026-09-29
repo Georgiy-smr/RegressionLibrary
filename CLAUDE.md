@@ -67,21 +67,29 @@ different pressure, so the error shows up in **X1** at an unchanged Y. Hence the
 the characteristic X1 = g(Y), 2nd degree, by QR on centered Y (no normal equations, no
 conversion back to the original basis, so not `PolynomialLeastSquaresSolver`), and searches
 every subset of up to min(4, n − 5) points for the smallest one whose removal leaves all code
-residuals ≤ τ while every removed point misses by > τ. τ = relativeTolerance (default 5e-5)
-× (X1max − X1min) is sensor noise in codes, not half a weight. Tests inject errors into X1.
+residuals ≤ τ while every removed point misses by > τ. Tests inject errors into X1.
+
+τ = relativeTolerance (default 5e-5) × (Ymax − Ymin) × |Theil–Sen slope of X1 over Y|, in
+codes. The scale comes from Y because Y is exact and X1 contains the outliers: a gross end error
+changes the code range (X1[10] += 30 on 235 / 15 °C: −10%) but not τ. On clean data it equals the
+code range within 0.02%. τ is sensor noise, not half a weight. Measured clean margin: worst
+residual / scale is 0.23–1.29·10⁻⁵ (235), 1.85–2.22·10⁻⁵ (223), 1.73–2.59·10⁻⁵ (224), so the
+default is 1.9× the worst series.
 
 - Empty list = clean; all `Outlier` = unique minimal set (`CodeError` = X1 − g(Y), in codes);
   all `AmbiguousPoint` = union of several equally good sets; `SeriesNotResolvableException`
   (`MaxOutliers`, `Tolerance`) = too many errors, re-measure.
 - Don't replace the exhaustive search with "drop the largest residual and refit": least squares
   smears an end-point error or a shifted tail over the series.
-- Known limit: at ~10τ, several errors can come back `Ambiguous`, and on unevenly spaced
-  series an isolated end point can produce a confident but wrong `Outlier` set (numbers in the
-  issue #21 comments).
-- Tests in `SolversTests\OutlierDetection\`: `SinglePointSearchTests`, `TwoPointSearchTests`,
-  `ExceptionTests`, on the visible `Sensor235Samples`, with errors added to X1 via
-  `InlineData`. The owner wants tests this simple and the new code without comments; add
-  further scenarios as separate classes only when asked.
+- Known limit (separate follow-up, not solved): on unevenly spaced series an isolated end point
+  has leverage ≈ 1 and can absorb its own error, giving a confident but wrong `Outlier` set.
+- Tests in `SolversTests\OutlierDetection\`: class = number of errors (`CleanSampleTests`,
+  `SinglePointSearchTests`, `TwoPointSearchTests`, plus `ExceptionTests`), method = sample
+  (`Sensor235At15C`, `Sensor223Series1`, …), `InlineData` = where and how big the error is, in
+  codes. Samples are visible in `Sensor235Samples` / `Sensor223Samples` / `Sensor224Samples`
+  (`Sensor223And224Data` is built from them). Scope is deliberately 0 / 1 / 2 errors + the
+  exception: more than 2 loading mistakes per series is rare. The owner wants tests this simple
+  and the new code without comments; add scenarios only when asked.
 
 ## ApproximationCalculationError
 
@@ -101,8 +109,9 @@ wrong-mode method throws `InvalidOperationException`.
 - `GausTests.cs` / `QRfactorized.cs` — test the raw solvers directly.
 - `SolversTests\ApproximationServiceTests\` — `ApproximationServiceTests.cs` (original dataset),
   plus `ApproximationServiceTests223.cs` and `ApproximationServiceTests224.cs`, whose data lives in
-  the shared `Sensor223And224Data` (from Excel exports `223.xlsx`/`224.xlsx`, Лист1,
-  columns A/B/C = X1/X2/Y, rows 2-56; 5 series of 11 points each), running the same
+  `Sensor223And224Data`, concatenated from `Sensor223Samples` / `Sensor224Samples` (from Excel
+  exports `223.xlsx`/`224.xlsx`, Лист1, columns A/B/C = X1/X2/Y, rows 2-56; 5 series of 11
+  points each), running the same
   `MaxErrorIsBelowTolerance()`-style test. `PolynomialLeastSquaresSolver`'s `GetMax()` must be
   under 0.011 on both. The legacy `ApproximationService` path must also be under 0.011 on 224,
   but on 223 it is asserted against its observed error (see below).

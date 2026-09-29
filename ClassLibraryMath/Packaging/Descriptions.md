@@ -60,9 +60,22 @@ IReadOnlyList<SuspiciousPoint> suspicious = detector.GetSuspiciousPoints(series)
 - **`SeriesNotResolvableException`:** more than `MaxOutliers` (at most 4) points are off, or the
   threshold is wrong. Re-measure the series. `Tolerance` is the τ that was used, in codes.
 
-τ = `relativeTolerance` × (X1max − X1min) is the **sensor noise** in codes, not half a weight: with a τ that
-large the curve absorbs an error at an end point. The default 5·10⁻⁵ is about 1.9× the worst clean
-residual seen on sensors 223/224/235. Errors of about **50τ** are found exactly. Near **10τ**
-(≈ 0.05% of range) a single error is still found, but several errors may come back as
-`AmbiguousPoint`, and on unevenly spaced series with an isolated end point the detector can
-return a wrong `Outlier` set.
+**Threshold.** τ = `relativeTolerance` × (Ymax − Ymin) × |s|, where s is the Theil–Sen slope of
+`X1` over `Y` (the median of the pairwise slopes). The scale comes from `Y` because `Y` is exact,
+while `X1` contains the very points being searched: a gross error at an end of the series would
+change the code range and with it τ, but it barely moves the median slope. On clean data
+(Ymax − Ymin)·|s| equals the code range to within 0.02%. τ is the **sensor noise** in codes, not
+half a weight: with a τ that large the curve absorbs an error at an end point.
+
+**Margin.** The worst clean residual, max |X1 − g(Y)| / ((Ymax − Ymin)·|s|), measured on 15 real
+series: sensor 235 0.23–1.29·10⁻⁵, 223 1.85–2.22·10⁻⁵, 224 1.73–2.59·10⁻⁵. The default 5·10⁻⁵ is
+1.9× the worst of them (224, series 5).
+
+**Tested scope.** Clean series of 3 sensors (all 15 real series); 1 and 2 errors at the ends and
+in the middle on one series of each sensor; 6 errors → exception. Up to 4 errors are supported by
+the algorithm, but more than 2 are deliberately not tested, because an operator rarely makes more
+than two loading mistakes in one series.
+
+**Known limit.** On unevenly spaced series, an isolated end point has leverage close to 1: the
+curve bends to reach it and absorbs its own error, so the detector can return a confident but wrong
+`Outlier` set.

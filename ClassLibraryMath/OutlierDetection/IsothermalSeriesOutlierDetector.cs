@@ -32,7 +32,7 @@ public class IsothermalSeriesOutlierDetector
 
         var n = points.Length;
         var maxOutliers = Math.Min(MaxOutliersCap, n - MinimumPoints);
-        var tolerance = _relativeTolerance * (points.Max(p => p.X1) - points.Min(p => p.X1));
+        var tolerance = _relativeTolerance * (points.Max(p => p.Y) - points.Min(p => p.Y)) * Math.Abs(TheilSenSlope(points));
         var vandermonde = CenteredVandermonde(points);
         var codes = Vector<double>.Build.Dense(points.Select(p => p.X1).ToArray());
 
@@ -59,6 +59,19 @@ public class IsothermalSeriesOutlierDetector
         }
 
         throw new SeriesNotResolvableException(maxOutliers, tolerance);
+    }
+
+    private static double TheilSenSlope(DataTwoFact[] points)
+    {
+        var slopes = new List<double>();
+        for (var i = 0; i < points.Length; i++)
+        for (var j = i + 1; j < points.Length; j++)
+            if (points[j].Y != points[i].Y)
+                slopes.Add((points[j].X1 - points[i].X1) / (points[j].Y - points[i].Y));
+
+        slopes.Sort();
+        var middle = slopes.Count / 2;
+        return slopes.Count % 2 == 1 ? slopes[middle] : (slopes[middle - 1] + slopes[middle]) / 2;
     }
 
     private static bool IsAccepted(int[] removed, double[] residuals, double tolerance)

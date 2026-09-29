@@ -1,4 +1,5 @@
 using Regression.OutlierDetection;
+using Regression.Two_factor_regression;
 
 namespace SolversTests;
 
@@ -49,8 +50,23 @@ public class ExceptionTests
 
         var exception = Assert.Throws<SeriesNotResolvableException>(() => _detector.GetSuspiciousPoints(points));
 
-        var codeRange = points.Max(point => point.X1) - points.Min(point => point.X1);
+        var cleanTolerance = CleanTolerance(Sensor235Samples.At15C);
         Assert.Equal(4, exception.MaxOutliers);
-        Assert.Equal(5e-5 * codeRange, exception.Tolerance, 1e-12);
+        Assert.Equal(cleanTolerance, exception.Tolerance, cleanTolerance * 1e-3);
+    }
+
+    private static double CleanTolerance(DataTwoFact[] sample)
+    {
+        var slopes = new List<double>();
+        for (var i = 0; i < sample.Length; i++)
+        for (var j = i + 1; j < sample.Length; j++)
+            if (sample[j].Y != sample[i].Y)
+                slopes.Add((sample[j].X1 - sample[i].X1) / (sample[j].Y - sample[i].Y));
+
+        slopes.Sort();
+        var middle = slopes.Count / 2;
+        var slope = slopes.Count % 2 == 1 ? slopes[middle] : (slopes[middle - 1] + slopes[middle]) / 2;
+        var pressureRange = sample.Max(point => point.Y) - sample.Min(point => point.Y);
+        return 5e-5 * pressureRange * Math.Abs(slope);
     }
 }
