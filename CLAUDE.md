@@ -75,16 +75,29 @@ wrong-mode method throws `InvalidOperationException`.
   plus `ApproximationServiceTests223.cs` and `ApproximationServiceTests224.cs`, each a
   self-contained class with its own `_data` field sourced from an Excel export
   (`223.xlsx`/`224.xlsx`, Лист1, columns A/B/C = X1/X2/Y, rows 2-56), running the same
-  `MaxErrorIsBelowTolerance()`-style test (both solvers' `GetMax()` error must be under 0.011).
+  `MaxErrorIsBelowTolerance()`-style test. `PolynomialLeastSquaresSolver`'s `GetMax()` must be
+  under 0.011 on both. The legacy `ApproximationService` path must also be under 0.011 on 224,
+  but on 223 it is asserted against its observed error (see below).
 
-## Known open bug
+## Resolved: dataset 223 (issue #5, closed)
 
-Dataset 223 fails `MaxErrorIsBelowTolerance()` for both solvers (MathNet ~0.043, Gaus ~0.224
-vs a 0.011 tolerance) while 224 passes, and an independently-computed MathCad reference for 223
-comes in at ~0.0015 — well within tolerance. Tracked in
-[issue #5](https://github.com/Georgiy-smr/RegressionLibrary/issues/5). Current hypothesis:
-normal-equations ill-conditioning from uncentered X1/X2 values raised to high powers. **Not yet
-fixed** — read the issue before attempting a fix, don't just loosen tolerances.
+The legacy normal-equations path (`ApproximationService` + `SolverMathNet`/`Solver`) gives
+wrong coefficients on 223 (`GetMax()` MathNet ~0.043, Gaus ~0.224). Its normal-equations
+matrix is ill-conditioned (~1E+32, on 224 too; `ConditionNumberHypothesisTests`). The fix
+is `PolynomialLeastSquaresSolver`: QR on a centered/scaled design matrix, ~0.0015 on 223,
+matching the MathCad reference to ~6 significant digits. The legacy path is left unchanged for
+backward compatibility, so `ApproximationServiceTests223` asserts it against its observed error
+(< 0.05 / < 0.25) and the 0.011 criterion against the new solver. Don't "fix" those bounds
+either way.
+
+## Current open issues
+
+- [#10](https://github.com/Georgiy-smr/RegressionLibrary/issues/10): sensor 235 misses the
+  0.003 tolerance at temperatures between calibration series. This is a model/data problem, not a
+  solver bug. The `SeriesCountAnalysis` tests document it, and the fourth-order
+  leave-one-series-out test is intentionally red.
+- [#21](https://github.com/Georgiy-smr/RegressionLibrary/issues/21): `IsothermalSeriesOutlierDetector`
+  for mis-loaded calibration points (spec in the issue).
 
 ## Workflow conventions observed in this repo's history
 

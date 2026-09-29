@@ -8,6 +8,7 @@
 ## User-specific files
 *.user
 *.suo
+.claude/settings.local.json
 
 ## NuGet
 *.nupkg
