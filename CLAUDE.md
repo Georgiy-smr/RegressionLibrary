@@ -69,12 +69,16 @@ conversion back to the original basis, so not `PolynomialLeastSquaresSolver`), a
 every subset of up to min(4, n − 5) points for the smallest one whose removal leaves all code
 residuals ≤ τ while every removed point misses by > τ. Tests inject errors into X1.
 
-τ = relativeTolerance (default 5e-5) × (Ymax − Ymin) × |Theil–Sen slope of X1 over Y|, in
-codes. The scale comes from Y because Y is exact and X1 contains the outliers: a gross end error
-changes the code range (X1[10] += 30 on 235 / 15 °C: −10%) but not τ. On clean data it equals the
-code range within 0.02%. τ is sensor noise, not half a weight. Measured clean margin: worst
-residual / scale is 0.23–1.29·10⁻⁵ (235), 1.85–2.22·10⁻⁵ (223), 1.73–2.59·10⁻⁵ (224), so the
-default is 1.9× the worst series.
+The constructor parameter is `accuracyClassPercent`, the sensor's accuracy class in % of range
+(default 0.01). τ is a metrological requirement set by the owner, not a number tuned on data:
+half the permissible error, reduced to the range, in codes:
+τ = (accuracyClassPercent / 100 / 2) × (Ymax − Ymin) × |Theil–Sen slope of X1 over Y|.
+The scale comes from Y because Y is exact and X1 contains the outliers: a gross end error changes
+the code range (X1[10] += 30 on 235 / 15 °C: −10%) but not τ. On clean data (Ymax − Ymin)·|s|
+equals the code range within 0.02%. Consequence, intended: a point off by more than half the
+permissible error is suspicious even if the cause is sensor noise, so a sensor whose noise is
+close to its requirement (e.g. colleague sample 4) gets flagged points. Fact: with class 0.01%
+all 15 real series are clean; the worst uses ~52% of τ (224 series 5).
 
 - Empty list = clean; all `Outlier` = unique minimal set (`CodeError` = X1 − g(Y), in codes);
   all `AmbiguousPoint` = union of several equally good sets; `SeriesNotResolvableException`

@@ -12,13 +12,13 @@ public class IsothermalSeriesOutlierDetector
     private const int MinimumPoints = Degree + 3;
     private const double MaxLeverage = 0.9;
 
-    private readonly double _relativeTolerance;
+    private readonly double _halfPermissibleErrorFraction;
 
-    public IsothermalSeriesOutlierDetector(double relativeTolerance = 5e-5)
+    public IsothermalSeriesOutlierDetector(double accuracyClassPercent = 0.01)
     {
-        if (!(relativeTolerance > 0))
-            throw new ArgumentOutOfRangeException(nameof(relativeTolerance), relativeTolerance, "Must be positive.");
-        _relativeTolerance = relativeTolerance;
+        if (!(accuracyClassPercent > 0))
+            throw new ArgumentOutOfRangeException(nameof(accuracyClassPercent), accuracyClassPercent, "The accuracy class must be positive.");
+        _halfPermissibleErrorFraction = accuracyClassPercent / 100 / 2;
     }
 
     public IReadOnlyList<SuspiciousPoint> GetSuspiciousPoints(IEnumerable<DataTwoFact> series)
@@ -34,7 +34,7 @@ public class IsothermalSeriesOutlierDetector
 
         var n = points.Length;
         var maxOutliers = Math.Min(MaxOutliersCap, n - MinimumPoints);
-        var tolerance = _relativeTolerance * (points.Max(p => p.Y) - points.Min(p => p.Y)) * Math.Abs(TheilSenSlope(points));
+        var tolerance = _halfPermissibleErrorFraction * (points.Max(p => p.Y) - points.Min(p => p.Y)) * Math.Abs(TheilSenSlope(points));
         var vandermonde = CenteredVandermonde(points);
         var codes = Vector<double>.Build.Dense(points.Select(p => p.X1).ToArray());
 

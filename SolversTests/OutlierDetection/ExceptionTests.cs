@@ -9,10 +9,10 @@ public class ExceptionTests
 
     [Theory]
     [InlineData(0)]
-    [InlineData(-0.00005)]
-    public void NonPositiveRelativeToleranceIsRejected(double relativeTolerance)
+    [InlineData(-0.01)]
+    public void NonPositiveAccuracyClassIsRejected(double accuracyClassPercent)
     {
-        Assert.Throws<ArgumentOutOfRangeException>(() => new IsothermalSeriesOutlierDetector(relativeTolerance));
+        Assert.Throws<ArgumentOutOfRangeException>(() => new IsothermalSeriesOutlierDetector(accuracyClassPercent));
     }
 
     [Fact]
@@ -44,18 +44,39 @@ public class ExceptionTests
     [InlineData(new[] { 1, 3, 5, 7, 9, 10 })]
     public void SampleWithSixCodeErrorsIsNotResolvable(int[] indices)
     {
-        var points = Sensor235Samples.At15C.ToArray();
-        foreach (var index in indices)
-            points[index] = points[index] with { X1 = points[index].X1 + 0.15 };
+        var points = WithCodeErrors(Sensor235Samples.At15C, indices);
 
         var exception = Assert.Throws<SeriesNotResolvableException>(() => _detector.GetSuspiciousPoints(points));
 
-        var cleanTolerance = CleanTolerance(Sensor235Samples.At15C);
+        var cleanTolerance = CleanTolerance(Sensor235Samples.At15C, 0.01);
         Assert.Equal(4, exception.MaxOutliers);
         Assert.Equal(cleanTolerance, exception.Tolerance, cleanTolerance * 1e-3);
     }
 
-    private static double CleanTolerance(DataTwoFact[] sample)
+    [Theory]
+    [InlineData(0.01)]
+    [InlineData(0.02)]
+    [InlineData(0.05)]
+    public void ToleranceIsHalfOfAccuracyClass(double accuracyClassPercent)
+    {
+        var points = WithCodeErrors(Sensor235Samples.At15C, new[] { 0, 2, 4, 6, 8, 10 });
+        var detector = new IsothermalSeriesOutlierDetector(accuracyClassPercent);
+
+        var exception = Assert.Throws<SeriesNotResolvableException>(() => detector.GetSuspiciousPoints(points));
+
+        var cleanTolerance = CleanTolerance(Sensor235Samples.At15C, accuracyClassPercent);
+        Assert.Equal(cleanTolerance, exception.Tolerance, cleanTolerance * 1e-3);
+    }
+
+    private static DataTwoFact[] WithCodeErrors(DataTwoFact[] sample, int[] indices)
+    {
+        var points = sample.ToArray();
+        foreach (var index in indices)
+            points[index] = points[index] with { X1 = points[index].X1 + 0.15 };
+        return points;
+    }
+
+    private static double CleanTolerance(DataTwoFact[] sample, double accuracyClassPercent)
     {
         var slopes = new List<double>();
         for (var i = 0; i < sample.Length; i++)
@@ -67,6 +88,6 @@ public class ExceptionTests
         var middle = slopes.Count / 2;
         var slope = slopes.Count % 2 == 1 ? slopes[middle] : (slopes[middle - 1] + slopes[middle]) / 2;
         var pressureRange = sample.Max(point => point.Y) - sample.Min(point => point.Y);
-        return 5e-5 * pressureRange * Math.Abs(slope);
+        return accuracyClassPercent / 100 / 2 * pressureRange * Math.Abs(slope);
     }
 }

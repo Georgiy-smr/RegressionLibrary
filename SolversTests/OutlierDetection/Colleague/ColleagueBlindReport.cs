@@ -11,7 +11,7 @@ namespace SolversTests.Colleague;
 public class ColleagueBlindReport
 {
     private const double RawCodesPerScaledCode = 100000;
-    private const double DefaultRelativeTolerance = 5e-5;
+    private const double DefaultAccuracyClassPercent = 0.01;
 
     private readonly ITestOutputHelper _output;
 
@@ -32,7 +32,7 @@ public class ColleagueBlindReport
     private void Report(DataTwoFact[] sample)
     {
         var slope = TheilSenSlope(sample);
-        var tolerance = DefaultRelativeTolerance * (sample.Max(p => p.Y) - sample.Min(p => p.Y)) * Math.Abs(slope);
+        var tolerance = DefaultAccuracyClassPercent / 100 / 2 * (sample.Max(p => p.Y) - sample.Min(p => p.Y)) * Math.Abs(slope);
         var leaveOneOut = Enumerable.Range(0, sample.Length).Select(i => LeaveOneOutResidual(sample, i)).ToArray();
         var leverages = Leverages(sample);
 
