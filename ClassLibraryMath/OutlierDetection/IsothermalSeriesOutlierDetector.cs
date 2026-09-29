@@ -65,23 +65,27 @@ public class IsothermalSeriesOutlierDetector
         var n = points.Length;
         var maxOutliers = Math.Min(MaxOutliersCap, n - MinimumPoints);
         var tolerance = _relativeTolerance * (points.Max(p => p.Y) - points.Min(p => p.Y));
-        var vandermonde = CenteredVandermonde(points);
+        var centering = new CenteredX1(points);
+        var vandermonde = centering.Vandermonde(points);
         var y = Vector<double>.Build.Dense(points.Select(p => p.Y).ToArray());
 
         for (var k = 0; k <= maxOutliers; k++)
         {
-            var accepted = new List<(int[] Removed, double[] Residuals)>();
+            var accepted = new List<(int[] Removed, Vector<double> Coefficients, double[] Residuals)>();
             foreach (var removed in Combinations(n, k))
             {
-                var residuals = ResidualsWithout(removed, vandermonde, y, points);
-                if (residuals is not null && IsAccepted(removed, residuals, tolerance))
-                    accepted.Add((removed, residuals));
+                var fit = FitWithout(removed, vandermonde, y, points);
+                if (fit is { } f && IsAccepted(removed, f.Residuals, tolerance))
+                    accepted.Add((removed, f.Coefficients, f.Residuals));
             }
 
             if (accepted.Count == 1)
             {
-                var (removed, residuals) = accepted[0];
-                return removed.Select(i => (SuspiciousPoint)new Outlier(i, points[i], residuals[i])).ToList();
+                var (removed, coefficients, residuals) = accepted[0];
+                return removed
+                    .Select(i => (SuspiciousPoint)new Outlier(
+                        i, points[i], residuals[i], points[i].X1 - centering.CodeAt(points[i].Y, coefficients, points[i].X1)))
+                    .ToList();
             }
             if (accepted.Count > 1)
             {
@@ -105,31 +109,56 @@ public class IsothermalSeriesOutlierDetector
     }
 
     /// <summary>
-    /// Fits the polynomial to every point not in <paramref name="removed"/> and returns the
-    /// residual Y − f(X1) of every point of the series, or null if the kept points cannot
-    /// determine the polynomial (fewer than Degree + 1 distinct X1).
+    /// Fits the polynomial to every point not in <paramref name="removed"/> and returns its
+    /// centered coefficients and the residual Y − f(X1) of every point of the series, or null
+    /// if the kept points cannot determine the polynomial (fewer than Degree + 1 distinct X1).
     /// </summary>
-    private static double[]? ResidualsWithout(int[] removed, Matrix<double> vandermonde, Vector<double> y, DataTwoFact[] points)
+    private static (Vector<double> Coefficients, double[] Residuals)? FitWithout(
+        int[] removed, Matrix<double> vandermonde, Vector<double> y, DataTwoFact[] points)
     {
         var kept = Enumerable.Range(0, points.Length).Where(i => Array.IndexOf(removed, i) < 0).ToArray();
         if (kept.Select(i => points[i].X1).Distinct().Count() <= Degree) return null;
 
         var x = Matrix<double>.Build.Dense(kept.Length, Degree + 1, (row, col) => vandermonde[kept[row], col]);
         var coefficients = MultipleRegression.QR(x, Vector<double>.Build.Dense(kept.Length, row => y[kept[row]]));
-        return (y - vandermonde * coefficients).ToArray();
+        return (coefficients, (y - vandermonde * coefficients).ToArray());
     }
 
     /// <summary>
-    /// Vandermonde matrix over centered/scaled X1, so the fit stays well-conditioned
+    /// Centered/scaled X1, u = (X1 − mean) / scale, so the fit stays well-conditioned
     /// (no normal equations — see issue #5). Coefficients are never converted back to the
-    /// original basis: only predictions and residuals are needed.
+    /// original basis: only predictions, residuals and the inverse at single points are needed.
     /// </summary>
-    private static Matrix<double> CenteredVandermonde(DataTwoFact[] points)
+    private sealed class CenteredX1
     {
-        var mean = points.Average(p => p.X1);
-        var scale = Math.Sqrt(points.Average(p => (p.X1 - mean) * (p.X1 - mean)));
-        return Matrix<double>.Build.Dense(points.Length, Degree + 1,
-            (row, col) => Math.Pow((points[row].X1 - mean) / scale, col));
+        private readonly double _mean;
+        private readonly double _scale;
+
+        public CenteredX1(DataTwoFact[] points)
+        {
+            _mean = points.Average(p => p.X1);
+            _scale = Math.Sqrt(points.Average(p => (p.X1 - _mean) * (p.X1 - _mean)));
+        }
+
+        public Matrix<double> Vandermonde(DataTwoFact[] points)
+            => Matrix<double>.Build.Dense(points.Length, Degree + 1,
+                (row, col) => Math.Pow((points[row].X1 - _mean) / _scale, col));
+
+        /// <summary>
+        /// f⁻¹(y): the X1 at which the fitted curve equals <paramref name="y"/>, by Newton's
+        /// method from <paramref name="startX1"/> (the curve is nearly linear, so a few steps suffice).
+        /// </summary>
+        public double CodeAt(double y, Vector<double> coefficients, double startX1)
+        {
+            var u = (startX1 - _mean) / _scale;
+            for (var iteration = 0; iteration < 20; iteration++)
+            {
+                var value = coefficients[0] + coefficients[1] * u + coefficients[2] * u * u - y;
+                var slope = coefficients[1] + 2 * coefficients[2] * u;
+                u -= value / slope;
+            }
+            return _mean + _scale * u;
+        }
     }
 
     private static IEnumerable<int[]> Combinations(int n, int k)

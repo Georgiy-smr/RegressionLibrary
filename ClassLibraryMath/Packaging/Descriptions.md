@@ -50,7 +50,9 @@ IReadOnlyList<SuspiciousPoint> suspicious = detector.GetSuspiciousPoints(series)
   points recorded on different reference gauges to one scale is the caller's job. Units don't matter.
 - **Empty list:** the series is clean.
 - **All `Outlier`:** the smallest set of points whose removal leaves the rest on a smooth
-  2nd-degree curve is unique. `Residual` is the loading error in `Y` units.
+  2nd-degree curve is unique. `CodeError` is how far the recorded pressure code is from the
+  code the clean characteristic gives at the reference pressure (in `X1` units); `Residual` is
+  the same deviation in `Y` units.
 - **All `AmbiguousPoint`:** several sets fit equally well; re-check every returned point.
 - **`SeriesNotResolvableException`:** more than `MaxOutliers` (at most 4) points are off, or the
   threshold is wrong. Re-measure the series. `Tolerance` is the τ that was used.

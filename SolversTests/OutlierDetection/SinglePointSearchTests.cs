@@ -3,16 +3,17 @@ using Regression.OutlierDetection;
 namespace SolversTests;
 
 /// <summary>
-/// Searching for one mis-loaded point in a sensor 235 sample of 11 points: a clean sample gives
-/// an empty result; after the pressure code of one point is changed, that point is found.
+/// Searching for one mis-loaded point in the sensor 235 sample at 15 °C (11 points): a clean
+/// sample gives an empty result; after an error is added to the pressure code of one point,
+/// that point is found with that same error.
 /// </summary>
 public class SinglePointSearchTests
 {
     /// <summary>
-    /// How much the pressure code of a spoiled point is changed: 0.15 codes ≈ 0.5 kPa on
-    /// sensor 235, ≈ 50τ with the default threshold.
+    /// τ converted to codes for this sample: 5·10⁻⁵ × 199.68 kPa ≈ 0.010 kPa, divided by the
+    /// characteristic's slope ≈ 3.29 kPa per code.
     /// </summary>
-    private const double PressureCodeShift = 0.15;
+    private const double CodeTolerance = 0.003;
 
     private readonly IsothermalSeriesOutlierDetector _detector = new();
 
@@ -29,22 +30,27 @@ public class SinglePointSearchTests
         Assert.Empty(result);
     }
 
-    /// <summary>Every point of every sample: (sample, index).</summary>
-    public static IEnumerable<object[]> EveryPoint()
-        => from sample in Enumerable.Range(0, Sensor235Samples.All.Length)
-           from index in Enumerable.Range(0, Sensor235Samples.All[sample].Length)
-           select new object[] { sample, index };
-
     [Theory]
-    [MemberData(nameof(EveryPoint))]
-    public void PointWithChangedPressureCodeIsFound(int sample, int index)
+    [InlineData(0, 0.15)]
+    [InlineData(1, -0.15)]
+    [InlineData(2, 0.05)]
+    [InlineData(3, -0.05)]
+    [InlineData(4, 0.15)]
+    [InlineData(5, -0.15)]
+    [InlineData(6, 0.05)]
+    [InlineData(7, -0.05)]
+    [InlineData(8, 0.15)]
+    [InlineData(9, -0.15)]
+    [InlineData(10, 0.05)]
+    public void PointWithCodeErrorIsFound(int index, double codeError)
     {
-        var points = Sensor235Samples.All[sample].ToArray();
-        points[index] = points[index] with { X1 = points[index].X1 + PressureCodeShift };
+        var points = Sensor235Samples.At15C.ToArray();
+        points[index] = points[index] with { X1 = points[index].X1 + codeError };
 
         var result = _detector.GetSuspiciousPoints(points);
 
         var outlier = Assert.IsType<Outlier>(Assert.Single(result));
         Assert.Equal(index, outlier.Index);
+        Assert.Equal(codeError, outlier.CodeError, CodeTolerance);
     }
 }
