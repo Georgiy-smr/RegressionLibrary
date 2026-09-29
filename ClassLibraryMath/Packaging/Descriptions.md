@@ -99,3 +99,40 @@ the largest leverage of a kept point is 0.78 (235) and 0.79 (223, 224), across t
 isolated end point, isolated start point) are tested separately from the real data: 0, 1 and 2
 errors. On the isolated samples, the result is always safe: either exactly the injected
 `Outlier`s, or `AmbiguousPoint`s that include every injected point.
+
+## Checking a whole calibration dataset
+
+`CalibrationDatasetChecker.Check(IEnumerable<CalibrationPoint>)` checks **all temperatures of a
+sensor at once**: it splits the dataset into isothermal series and runs
+`IsothermalSeriesOutlierDetector` on each of them.
+
+```csharp
+var checker = new CalibrationDatasetChecker(accuracyClassPercent: 0.01, seriesTemperatureGap: 2.0);
+DatasetCheckResult result = checker.Check(dataset);
+```
+
+- **Input:** `CalibrationPoint(PressureCode, TemperatureCode, Pressure, Temperature)`, one per
+  calibration point, in any order. `Temperature` is the measured temperature (°C). Each point goes
+  to the detector as `X1 = PressureCode`, `X2 = TemperatureCode`, `Y = Pressure`.
+- **Splitting:** points are sorted by the measured `Temperature`, and a new series starts wherever
+  two neighbouring temperatures differ by more than `seriesTemperatureGap` (default 2 °C). The
+  temperature code isn't used for splitting, because it drifts with pressure inside a series.
+  Series may be interleaved in the input. Inside a series the points keep their input order.
+- **Nominal temperature** of a series = the median of its measured temperatures, rounded to 1 °C
+  (halves away from zero, so 24.5 → 25). Series are ordered by it.
+- **Series status** (`DatasetCheckResult.Series`):
+  - `CheckedSeries`: the detector ran. An empty `SuspiciousPoints` means the series is clean.
+  - `UnresolvableSeries`: more than 4 bad points (`MaxOutliers`, `Tolerance` as in
+    `SeriesNotResolvableException`). Re-measure the series.
+  - `SkippedSeries`: the detector could not run (e.g. fewer than 5 points, all pressures equal).
+    `Reason` is a short text for the operator.
+
+  A series that can't be checked never stops the others from being checked.
+- **Rows:** `SeriesCheck.Rows` and `DatasetSuspiciousPoint.Row` are 0-based positions in the input
+  sequence. The caller maps them to spreadsheet rows.
+- **Suspicious points:** `DatasetCheckResult.SuspiciousPoints` lists every suspicious point of every
+  series, ordered by `Row`. Each one carries its series' nominal temperature, and `Detail` is the
+  detector's `Outlier` / `AmbiguousPoint`: its `Index` is series-local, and an `Outlier` has
+  `CodeError`.
+- **`IsClean`** is true only when every series is a `CheckedSeries` with no suspicious points. An
+  empty dataset gives no series and is clean.

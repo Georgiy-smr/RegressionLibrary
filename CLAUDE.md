@@ -106,6 +106,35 @@ all 15 real series are clean; the worst uses ~52% of τ (224 series 5).
   covering every injected point. The owner wants tests this simple
   and the new code without comments; add scenarios only when asked.
 
+## CalibrationDatasetChecker (issue #24)
+
+`Regression.OutlierDetection`, `ClassLibraryMath\OutlierDetection\CalibrationDatasetChecker.cs`
+and `DatasetCheckResult.cs`. It checks a whole sensor dataset (all temperatures) as a layer on
+top of the unchanged `IsothermalSeriesOutlierDetector`. The consumer is TwoFactRegressCalc
+(Excel columns A = pressure code, B = temperature code, C = pressure, D = temperature). The logic
+lives here; the app only calls it and shows the result.
+
+- Input: `CalibrationPoint(PressureCode, TemperatureCode, Pressure, Temperature)`, mapped to the
+  detector as X1 / X2 / Y.
+- Splitting (owner's decision): by the **measured temperature**, not the temperature code, which
+  drifts with pressure. Points are sorted by temperature, and a new series starts where
+  neighbours differ by more than `seriesTemperatureGap` (default 2 °C). Input order doesn't
+  matter; inside a series the points keep input order.
+- Nominal temperature = median of the series' temperatures, `Math.Round(…, AwayFromZero)` to 1 °C.
+  Series are ordered by it.
+- Status per series: `CheckedSeries` (detector ran; empty = clean), `UnresolvableSeries`
+  (`SeriesNotResolvableException`), `SkippedSeries` (detector threw `ArgumentException`, e.g. < 5
+  points; `Reason` = its message). One bad series never stops the others.
+- `Rows` / `DatasetSuspiciousPoint.Row` are 0-based positions in the input; `Detail.Index` stays
+  series-local. `SuspiciousPoints` is flattened and ordered by `Row`. `IsClean` = every series is
+  a `CheckedSeries` with no suspicious points (an empty dataset is clean).
+- Tests: `SolversTests\OutlierDetection\Dataset\` (namespace `SolversTests.Dataset`), one class
+  per scenario (`SplittingTests`, `OneErrorTests`, `TwoSeriesErrorTests`,
+  `UnresolvableSeriesTests`, `ShortSeriesTests`, `DatasetValidationTests`). The dataset is
+  `Sensor235Dataset`: the 5 sensor-235 samples at 15/18/21/24.5/28 °C, rows 0–54 in that order,
+  with a fixed per-point temperature jitter whose median is 0, so the nominals are 15, 18, 21,
+  25, 28.
+
 ## ApproximationCalculationError
 
 `Regression.ErrorAnalysis` namespace, `ClassLibraryMath\ErrorAnalysis\ApproximationCalculationError.cs`
@@ -148,9 +177,8 @@ either way.
   0.003 tolerance at temperatures between calibration series. This is a model/data problem, not a
   solver bug. The `SeriesCountAnalysis` tests document it, and the fourth-order
   leave-one-series-out test is intentionally red.
-- [#21](https://github.com/Georgiy-smr/RegressionLibrary/issues/21): `IsothermalSeriesOutlierDetector`
-  is implemented (see above). Still open: whether to change the algorithm or the spec for the
-  ~10τ limit (wrong `Outlier` sets on unevenly spaced series).
+- [#24](https://github.com/Georgiy-smr/RegressionLibrary/issues/24): `CalibrationDatasetChecker`
+  for a whole dataset (see above). #21 (the single-series detector) is closed.
 
 ## Workflow conventions observed in this repo's history
 
