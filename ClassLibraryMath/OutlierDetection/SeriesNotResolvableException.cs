@@ -18,6 +18,6 @@ public class SeriesNotResolvableException : Exception
     /// <summary>The largest outlier set that was searched.</summary>
     public int MaxOutliers { get; }
 
-    /// <summary>The noise threshold τ that was used, in Y units.</summary>
+    /// <summary>The noise threshold τ that was used, in X1 (pressure code) units.</summary>
     public double Tolerance { get; }
 }

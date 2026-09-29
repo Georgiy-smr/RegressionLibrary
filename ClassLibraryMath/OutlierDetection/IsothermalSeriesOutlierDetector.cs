@@ -8,17 +8,23 @@ namespace Regression.OutlierDetection;
 /// Finds mis-loaded points (wrong, forgotten or extra dead weight) in one isothermal
 /// calibration series, right after it is recorded, while the point can still be re-measured.
 ///
-/// Within one temperature Y = f(X1) is smooth and nearly linear, so a 2nd-degree polynomial in
-/// X1 describes a clean series down to the sensor noise. The detector searches exhaustively for
-/// the smallest set of points whose removal leaves the rest on such a curve with every residual
-/// ≤ τ, while every removed point misses the curve by more than τ. Exhaustive search, not
-/// "drop the largest residual and refit": least squares smears an error at an end point, or a
-/// shifted tail, over the whole series, so the largest residual is often at the wrong point.
+/// Y is the target pressure the loads are meant to reproduce; it goes into the model as recorded.
+/// X1 is the sensor's pressure code for the pressure actually reproduced. A loading mistake
+/// reproduces a different pressure, so it shows up as a wrong X1 at an unchanged Y. Within one
+/// temperature the characteristic X1 = g(Y) is smooth and nearly linear, so a 2nd-degree
+/// polynomial in Y describes a clean series down to the sensor noise, and the residual
+/// X1 − g(Y) is the error in the pressure code.
+///
+/// The detector searches exhaustively for the smallest set of points whose removal leaves the
+/// rest on such a curve with every residual ≤ τ, while every removed point misses the curve by
+/// more than τ. Exhaustive search, not "drop the largest residual and refit": least squares smears
+/// an error at an end point, or a shifted tail, over the whole series, so the largest residual is
+/// often at the wrong point.
 ///
 /// Input convention (as used by the library's consumers): X1 = pressure code, X2 = temperature
-/// code (ignored — within a series it only drifts with pressure), Y = reference pressure. All Y of
-/// a series must be on one scale (e.g. gauge pressure, vacuum negative); the detector knows
-/// nothing about units or reference gauges.
+/// code (ignored — within a series it only drifts with pressure), Y = target (reference) pressure.
+/// All Y of a series must be on one scale (e.g. gauge pressure, vacuum negative); the detector
+/// knows nothing about units or reference gauges.
 /// </summary>
 public class IsothermalSeriesOutlierDetector
 {
@@ -29,8 +35,8 @@ public class IsothermalSeriesOutlierDetector
     private readonly double _relativeTolerance;
 
     /// <param name="relativeTolerance">
-    /// Noise threshold τ as a fraction of the series' pressure range:
-    /// τ = relativeTolerance × (Ymax − Ymin). The default 5·10⁻⁵ is about 1.9× the worst
+    /// Noise threshold τ as a fraction of the series' pressure-code range:
+    /// τ = relativeTolerance × (X1max − X1min). The default 5·10⁻⁵ is about 1.9× the worst
     /// 2nd-degree residual seen on real series of sensors 223/224/235. τ is the sensor noise,
     /// not "half a weight": with τ that large the curve absorbs an error at an end point.
     /// Errors of about 50τ are found exactly; near 10τ several errors may come back as
@@ -49,7 +55,7 @@ public class IsothermalSeriesOutlierDetector
     /// Empty — the series is clean. All <see cref="Outlier"/> — the minimal outlier set is unique.
     /// All <see cref="AmbiguousPoint"/> — several minimal sets fit equally well; their union is returned.
     /// </summary>
-    /// <exception cref="ArgumentException">Fewer than 5 points, or all X1 equal.</exception>
+    /// <exception cref="ArgumentException">Fewer than 5 points, all X1 equal, or all Y equal.</exception>
     /// <exception cref="SeriesNotResolvableException">
     /// No set of at most min(4, n − 5) points explains the deviations.
     /// </exception>
@@ -61,31 +67,29 @@ public class IsothermalSeriesOutlierDetector
             throw new ArgumentException($"A series needs at least {MinimumPoints} points, got {points.Length}.", nameof(series));
         if (points.All(p => p.X1 == points[0].X1))
             throw new ArgumentException("All X1 values of the series are equal.", nameof(series));
+        if (points.All(p => p.Y == points[0].Y))
+            throw new ArgumentException("All Y values of the series are equal.", nameof(series));
 
         var n = points.Length;
         var maxOutliers = Math.Min(MaxOutliersCap, n - MinimumPoints);
-        var tolerance = _relativeTolerance * (points.Max(p => p.Y) - points.Min(p => p.Y));
-        var centering = new CenteredX1(points);
-        var vandermonde = centering.Vandermonde(points);
-        var y = Vector<double>.Build.Dense(points.Select(p => p.Y).ToArray());
+        var tolerance = _relativeTolerance * (points.Max(p => p.X1) - points.Min(p => p.X1));
+        var vandermonde = CenteredVandermonde(points);
+        var codes = Vector<double>.Build.Dense(points.Select(p => p.X1).ToArray());
 
         for (var k = 0; k <= maxOutliers; k++)
         {
-            var accepted = new List<(int[] Removed, Vector<double> Coefficients, double[] Residuals)>();
+            var accepted = new List<(int[] Removed, double[] Residuals)>();
             foreach (var removed in Combinations(n, k))
             {
-                var fit = FitWithout(removed, vandermonde, y, points);
-                if (fit is { } f && IsAccepted(removed, f.Residuals, tolerance))
-                    accepted.Add((removed, f.Coefficients, f.Residuals));
+                var residuals = ResidualsWithout(removed, vandermonde, codes, points);
+                if (residuals is not null && IsAccepted(removed, residuals, tolerance))
+                    accepted.Add((removed, residuals));
             }
 
             if (accepted.Count == 1)
             {
-                var (removed, coefficients, residuals) = accepted[0];
-                return removed
-                    .Select(i => (SuspiciousPoint)new Outlier(
-                        i, points[i], residuals[i], points[i].X1 - centering.CodeAt(points[i].Y, coefficients, points[i].X1)))
-                    .ToList();
+                var (removed, residuals) = accepted[0];
+                return removed.Select(i => (SuspiciousPoint)new Outlier(i, points[i], residuals[i])).ToList();
             }
             if (accepted.Count > 1)
             {
@@ -109,56 +113,31 @@ public class IsothermalSeriesOutlierDetector
     }
 
     /// <summary>
-    /// Fits the polynomial to every point not in <paramref name="removed"/> and returns its
-    /// centered coefficients and the residual Y − f(X1) of every point of the series, or null
-    /// if the kept points cannot determine the polynomial (fewer than Degree + 1 distinct X1).
+    /// Fits the polynomial to every point not in <paramref name="removed"/> and returns the
+    /// residual X1 − g(Y) of every point of the series, or null if the kept points cannot
+    /// determine the polynomial (fewer than Degree + 1 distinct Y).
     /// </summary>
-    private static (Vector<double> Coefficients, double[] Residuals)? FitWithout(
-        int[] removed, Matrix<double> vandermonde, Vector<double> y, DataTwoFact[] points)
+    private static double[]? ResidualsWithout(int[] removed, Matrix<double> vandermonde, Vector<double> codes, DataTwoFact[] points)
     {
         var kept = Enumerable.Range(0, points.Length).Where(i => Array.IndexOf(removed, i) < 0).ToArray();
-        if (kept.Select(i => points[i].X1).Distinct().Count() <= Degree) return null;
+        if (kept.Select(i => points[i].Y).Distinct().Count() <= Degree) return null;
 
         var x = Matrix<double>.Build.Dense(kept.Length, Degree + 1, (row, col) => vandermonde[kept[row], col]);
-        var coefficients = MultipleRegression.QR(x, Vector<double>.Build.Dense(kept.Length, row => y[kept[row]]));
-        return (coefficients, (y - vandermonde * coefficients).ToArray());
+        var coefficients = MultipleRegression.QR(x, Vector<double>.Build.Dense(kept.Length, row => codes[kept[row]]));
+        return (codes - vandermonde * coefficients).ToArray();
     }
 
     /// <summary>
-    /// Centered/scaled X1, u = (X1 − mean) / scale, so the fit stays well-conditioned
+    /// Vandermonde matrix over centered/scaled Y, so the fit stays well-conditioned
     /// (no normal equations — see issue #5). Coefficients are never converted back to the
-    /// original basis: only predictions, residuals and the inverse at single points are needed.
+    /// original basis: only predictions and residuals are needed.
     /// </summary>
-    private sealed class CenteredX1
+    private static Matrix<double> CenteredVandermonde(DataTwoFact[] points)
     {
-        private readonly double _mean;
-        private readonly double _scale;
-
-        public CenteredX1(DataTwoFact[] points)
-        {
-            _mean = points.Average(p => p.X1);
-            _scale = Math.Sqrt(points.Average(p => (p.X1 - _mean) * (p.X1 - _mean)));
-        }
-
-        public Matrix<double> Vandermonde(DataTwoFact[] points)
-            => Matrix<double>.Build.Dense(points.Length, Degree + 1,
-                (row, col) => Math.Pow((points[row].X1 - _mean) / _scale, col));
-
-        /// <summary>
-        /// f⁻¹(y): the X1 at which the fitted curve equals <paramref name="y"/>, by Newton's
-        /// method from <paramref name="startX1"/> (the curve is nearly linear, so a few steps suffice).
-        /// </summary>
-        public double CodeAt(double y, Vector<double> coefficients, double startX1)
-        {
-            var u = (startX1 - _mean) / _scale;
-            for (var iteration = 0; iteration < 20; iteration++)
-            {
-                var value = coefficients[0] + coefficients[1] * u + coefficients[2] * u * u - y;
-                var slope = coefficients[1] + 2 * coefficients[2] * u;
-                u -= value / slope;
-            }
-            return _mean + _scale * u;
-        }
+        var mean = points.Average(p => p.Y);
+        var scale = Math.Sqrt(points.Average(p => (p.Y - mean) * (p.Y - mean)));
+        return Matrix<double>.Build.Dense(points.Length, Degree + 1,
+            (row, col) => Math.Pow((points[row].Y - mean) / scale, col));
     }
 
     private static IEnumerable<int[]> Combinations(int n, int k)

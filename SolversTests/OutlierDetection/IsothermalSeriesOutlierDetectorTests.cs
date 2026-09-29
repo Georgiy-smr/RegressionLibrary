@@ -70,7 +70,7 @@ public class IsothermalSeriesOutlierDetectorTests
             var ok = result.Count == 1
                      && result[0] is Outlier outlier
                      && outlier.Index == index
-                     && Math.Abs(outlier.Residual - delta) <= ResidualTolerance(index, series);
+                     && Math.Abs(outlier.CodeError - delta) <= ResidualTolerance(index, series);
             if (!ok) failures.Add($"{name}, δ={delta:G4} at {index}: {Describe(result)}");
         }
         Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures));
@@ -264,8 +264,8 @@ public class IsothermalSeriesOutlierDetectorTests
             var inKilo = _sut.GetSuspiciousPoints(scaled).Cast<Outlier>().Single();
 
             Assert.Equal(original.Index, inKilo.Index);
-            Assert.True(Math.Abs(inKilo.Residual - 1000 * original.Residual) <= 1e-9 * Math.Abs(inKilo.Residual),
-                $"{name} at {index}: {inKilo.Residual} vs 1000 × {original.Residual}");
+            Assert.True(Math.Abs(inKilo.CodeError - 1000 * original.CodeError) <= 1e-9 * Math.Abs(inKilo.CodeError),
+                $"{name} at {index}: {inKilo.CodeError} vs 1000 × {original.CodeError}");
         }
     }
 
@@ -310,5 +310,5 @@ public class IsothermalSeriesOutlierDetectorTests
     private static string Describe(IReadOnlyList<SuspiciousPoint> result)
         => result.Count == 0
             ? "empty"
-            : string.Join(", ", result.Select(p => p is Outlier o ? $"Outlier {o.Index} ({o.Residual:G4})" : $"Ambiguous {p.Index}"));
+            : string.Join(", ", result.Select(p => p is Outlier o ? $"Outlier {o.Index} ({o.CodeError:G4})" : $"Ambiguous {p.Index}"));
 }

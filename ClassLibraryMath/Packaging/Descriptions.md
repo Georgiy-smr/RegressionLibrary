@@ -45,19 +45,22 @@ var detector = new IsothermalSeriesOutlierDetector(); // relativeTolerance = 5e-
 IReadOnlyList<SuspiciousPoint> suspicious = detector.GetSuspiciousPoints(series);
 ```
 
-- **Input:** `X1` = pressure code, `X2` = temperature code (not used), `Y` = reference pressure.
-  All `Y` of the series must be on one scale (e.g. gauge pressure, vacuum negative); bringing
-  points recorded on different reference gauges to one scale is the caller's job. Units don't matter.
+- **Input:** `X1` = pressure code, `X2` = temperature code (not used), `Y` = target pressure the
+  loads are meant to reproduce. All `Y` of the series must be on one scale (e.g. gauge pressure,
+  vacuum negative); bringing points recorded on different reference gauges to one scale is the
+  caller's job. Units don't matter.
+- **Model:** a loading mistake reproduces a different pressure, so it shows up as a wrong
+  pressure code at an unchanged `Y`. The detector fits the characteristic `X1 = g(Y)`
+  (2nd degree) and looks at the code residuals.
 - **Empty list:** the series is clean.
 - **All `Outlier`:** the smallest set of points whose removal leaves the rest on a smooth
-  2nd-degree curve is unique. `CodeError` is how far the recorded pressure code is from the
-  code the clean characteristic gives at the reference pressure (in `X1` units); `Residual` is
-  the same deviation in `Y` units.
+  2nd-degree curve is unique. `CodeError` = `X1 − g(Y)`: how far the recorded pressure code is
+  from the code the clean characteristic gives at the target pressure, in `X1` units.
 - **All `AmbiguousPoint`:** several sets fit equally well; re-check every returned point.
 - **`SeriesNotResolvableException`:** more than `MaxOutliers` (at most 4) points are off, or the
-  threshold is wrong. Re-measure the series. `Tolerance` is the τ that was used.
+  threshold is wrong. Re-measure the series. `Tolerance` is the τ that was used, in codes.
 
-τ = `relativeTolerance` × (Ymax − Ymin) is the **sensor noise**, not half a weight: with a τ that
+τ = `relativeTolerance` × (X1max − X1min) is the **sensor noise** in codes, not half a weight: with a τ that
 large the curve absorbs an error at an end point. The default 5·10⁻⁵ is about 1.9× the worst clean
 residual seen on sensors 223/224/235. Errors of about **50τ** are found exactly. Near **10τ**
 (≈ 0.05% of range) a single error is still found, but several errors may come back as

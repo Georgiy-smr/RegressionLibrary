@@ -59,15 +59,18 @@ firmware as is). Downstream consumers build a list of
 
 `Regression.OutlierDetection`, `ClassLibraryMath\OutlierDetection\` — finds mis-loaded points
 (wrong/forgotten dead weight) in **one isothermal series** of `DataTwoFact` (X1 = pressure code,
-Y = reference pressure, all Y on one scale; X2 ignored). Fits a 2nd-degree Y(X1) by QR on
-centered X1 (no normal equations, no conversion back to the original basis, so not
-`PolynomialLeastSquaresSolver`) and searches every subset of up to min(4, n − 5) points for the
-smallest one whose removal leaves all residuals ≤ τ while every removed point misses by > τ.
-τ = relativeTolerance (default 5e-5) × (Ymax − Ymin) is sensor noise, not half a weight.
+Y = target pressure the loads are meant to reproduce, all Y on one scale; X2 ignored).
 
-- Empty list = clean; all `Outlier` = unique minimal set (`CodeError` = X1 − f⁻¹(Y), the
-  deviation of the recorded code from the characteristic at the reference pressure; `Residual` =
-  the same deviation in Y units);
+Error model (clarified by the repo owner after the #21 spec, which had it the other way round):
+Y is taken as exact and goes into the model as recorded; a loading mistake reproduces a
+different pressure, so the error shows up in **X1** at an unchanged Y. Hence the detector fits
+the characteristic X1 = g(Y), 2nd degree, by QR on centered Y (no normal equations, no
+conversion back to the original basis, so not `PolynomialLeastSquaresSolver`), and searches
+every subset of up to min(4, n − 5) points for the smallest one whose removal leaves all code
+residuals ≤ τ while every removed point misses by > τ. τ = relativeTolerance (default 5e-5)
+× (X1max − X1min) is sensor noise in codes, not half a weight. Tests inject errors into X1.
+
+- Empty list = clean; all `Outlier` = unique minimal set (`CodeError` = X1 − g(Y), in codes);
   all `AmbiguousPoint` = union of several equally good sets; `SeriesNotResolvableException`
   (`MaxOutliers`, `Tolerance`) = too many errors, re-measure.
 - Don't replace the exhaustive search with "drop the largest residual and refit": least squares
@@ -76,6 +79,10 @@ smallest one whose removal leaves all residuals ≤ τ while every removed point
   series an isolated end point can produce a confident but wrong `Outlier` set. The tests in
   `SolversTests\OutlierDetection\` are relaxed accordingly (their class summary lists how); the
   strict numbers are in the issue #21 comment.
+- Tests: `SinglePointSearchTests` / `TwoPointSearchTests` are the main, simple ones (visible
+  `Sensor235Samples`, `InlineData(index, codeError)`). The older `IsothermalSeriesOutlierDetectorTests`
+  still injects errors into Y and checks them in Y units, so 4 of its checks fail since the switch
+  to X1 = g(Y); reworking it is postponed by the owner.
 
 ## ApproximationCalculationError
 

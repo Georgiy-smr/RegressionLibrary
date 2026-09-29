@@ -10,12 +10,11 @@ public abstract record SuspiciousPoint(int Index, DataTwoFact Point);
 
 /// <summary>
 /// A confidently identified outlier: the minimal outlier set is unique.
-/// <see cref="Residual"/> = Point.Y − f(Point.X1), where f is the curve fitted to the clean
-/// points, in Y units.
-/// <see cref="CodeError"/> = Point.X1 − f⁻¹(Point.Y), in X1 units: how far the recorded pressure
-/// code is from the code the clean characteristic gives at the reference pressure Point.Y.
+/// <see cref="CodeError"/> = Point.X1 − g(Point.Y), where g is the characteristic fitted to the
+/// clean points: how far the recorded pressure code is from the code the sensor gives at the
+/// target pressure Point.Y, in X1 units.
 /// </summary>
-public sealed record Outlier(int Index, DataTwoFact Point, double Residual, double CodeError) : SuspiciousPoint(Index, Point);
+public sealed record Outlier(int Index, DataTwoFact Point, double CodeError) : SuspiciousPoint(Index, Point);
 
 /// <summary>
 /// The point belongs to one of several equally good minimal outlier sets, so the detector
