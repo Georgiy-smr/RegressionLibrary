@@ -33,3 +33,31 @@ worse than least squares (leave-one-series-out, worst interior series: 0.0019 �
 For either solver, the number of distinct temperatures must exceed the temperature degree of the
 basis: at least 3 / 4 / 5 for second / third / fourth order. Otherwise the high-power terms are
 undetermined, and the in-sample error will not show it.
+
+## Detecting mis-loaded points in one isothermal series
+
+`IsothermalSeriesOutlierDetector.GetSuspiciousPoints(IEnumerable<DataTwoFact>)` checks **one
+series recorded at one temperature** right after it is measured, so that a point loaded with the
+wrong dead weight can be re-measured while the sensor is still in the thermostat.
+
+```csharp
+var detector = new IsothermalSeriesOutlierDetector(); // relativeTolerance = 5e-5
+IReadOnlyList<SuspiciousPoint> suspicious = detector.GetSuspiciousPoints(series);
+```
+
+- **Input:** `X1` = pressure code, `X2` = temperature code (not used), `Y` = reference pressure.
+  All `Y` of the series must be on one scale (e.g. gauge pressure, vacuum negative); bringing
+  points recorded on different reference gauges to one scale is the caller's job. Units don't matter.
+- **Empty list:** the series is clean.
+- **All `Outlier`:** the smallest set of points whose removal leaves the rest on a smooth
+  2nd-degree curve is unique. `Residual` is the loading error in `Y` units.
+- **All `AmbiguousPoint`:** several sets fit equally well; re-check every returned point.
+- **`SeriesNotResolvableException`:** more than `MaxOutliers` (at most 4) points are off, or the
+  threshold is wrong. Re-measure the series. `Tolerance` is the τ that was used.
+
+τ = `relativeTolerance` × (Ymax − Ymin) is the **sensor noise**, not half a weight: with a τ that
+large the curve absorbs an error at an end point. The default 5·10⁻⁵ is about 1.9× the worst clean
+residual seen on sensors 223/224/235. Errors of about **50τ** are found exactly. Near **10τ**
+(≈ 0.05% of range) a single error is still found, but several errors may come back as
+`AmbiguousPoint`, and on unevenly spaced series with an isolated end point the detector can
+return a wrong `Outlier` set.

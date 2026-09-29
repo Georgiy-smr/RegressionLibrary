@@ -55,6 +55,26 @@ firmware as is). Downstream consumers build a list of
   symbolic conversion back to the original basis). The symbolic conversion is slow, so it runs
   exactly once per fit. Never call it inside the minimax iteration loop.
 
+## IsothermalSeriesOutlierDetector (issue #21)
+
+`Regression.OutlierDetection`, `ClassLibraryMath\OutlierDetection\` — finds mis-loaded points
+(wrong/forgotten dead weight) in **one isothermal series** of `DataTwoFact` (X1 = pressure code,
+Y = reference pressure, all Y on one scale; X2 ignored). Fits a 2nd-degree Y(X1) by QR on
+centered X1 (no normal equations, no conversion back to the original basis, so not
+`PolynomialLeastSquaresSolver`) and searches every subset of up to min(4, n − 5) points for the
+smallest one whose removal leaves all residuals ≤ τ while every removed point misses by > τ.
+τ = relativeTolerance (default 5e-5) × (Ymax − Ymin) is sensor noise, not half a weight.
+
+- Empty list = clean; all `Outlier` = unique minimal set (`Residual` = loading error in Y units);
+  all `AmbiguousPoint` = union of several equally good sets; `SeriesNotResolvableException`
+  (`MaxOutliers`, `Tolerance`) = too many errors, re-measure.
+- Don't replace the exhaustive search with "drop the largest residual and refit": least squares
+  smears an end-point error or a shifted tail over the series.
+- Known limit: at ~10τ, several errors can come back `Ambiguous`, and on unevenly spaced
+  series an isolated end point can produce a confident but wrong `Outlier` set. The tests in
+  `SolversTests\OutlierDetection\` are relaxed accordingly (their class summary lists how); the
+  strict numbers are in the issue #21 comment.
+
 ## ApproximationCalculationError
 
 `Regression.ErrorAnalysis` namespace, `ClassLibraryMath\ErrorAnalysis\ApproximationCalculationError.cs`
@@ -72,9 +92,9 @@ wrong-mode method throws `InvalidOperationException`.
 
 - `GausTests.cs` / `QRfactorized.cs` — test the raw solvers directly.
 - `SolversTests\ApproximationServiceTests\` — `ApproximationServiceTests.cs` (original dataset),
-  plus `ApproximationServiceTests223.cs` and `ApproximationServiceTests224.cs`, each a
-  self-contained class with its own `_data` field sourced from an Excel export
-  (`223.xlsx`/`224.xlsx`, Лист1, columns A/B/C = X1/X2/Y, rows 2-56), running the same
+  plus `ApproximationServiceTests223.cs` and `ApproximationServiceTests224.cs`, whose data lives in
+  the shared `Sensor223And224Data` (from Excel exports `223.xlsx`/`224.xlsx`, Лист1,
+  columns A/B/C = X1/X2/Y, rows 2-56; 5 series of 11 points each), running the same
   `MaxErrorIsBelowTolerance()`-style test. `PolynomialLeastSquaresSolver`'s `GetMax()` must be
   under 0.011 on both. The legacy `ApproximationService` path must also be under 0.011 on 224,
   but on 223 it is asserted against its observed error (see below).
@@ -97,7 +117,8 @@ either way.
   solver bug. The `SeriesCountAnalysis` tests document it, and the fourth-order
   leave-one-series-out test is intentionally red.
 - [#21](https://github.com/Georgiy-smr/RegressionLibrary/issues/21): `IsothermalSeriesOutlierDetector`
-  for mis-loaded calibration points (spec in the issue).
+  is implemented (see above). Still open: whether to change the algorithm or the spec for the
+  ~10τ limit (wrong `Outlier` sets on unevenly spaced series).
 
 ## Workflow conventions observed in this repo's history
 
