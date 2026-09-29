@@ -65,7 +65,9 @@ centered X1 (no normal equations, no conversion back to the original basis, so n
 smallest one whose removal leaves all residuals ≤ τ while every removed point misses by > τ.
 τ = relativeTolerance (default 5e-5) × (Ymax − Ymin) is sensor noise, not half a weight.
 
-- Empty list = clean; all `Outlier` = unique minimal set (`Residual` = loading error in Y units);
+- Empty list = clean; all `Outlier` = unique minimal set (`CodeError` = X1 − f⁻¹(Y), the
+  deviation of the recorded code from the characteristic at the reference pressure; `Residual` =
+  the same deviation in Y units);
   all `AmbiguousPoint` = union of several equally good sets; `SeriesNotResolvableException`
   (`MaxOutliers`, `Tolerance`) = too many errors, re-measure.
 - Don't replace the exhaustive search with "drop the largest residual and refit": least squares
