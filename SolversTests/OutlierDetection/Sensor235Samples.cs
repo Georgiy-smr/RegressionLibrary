@@ -2,14 +2,8 @@ using Regression.Two_factor_regression;
 
 namespace SolversTests;
 
-/// <summary>
-/// Sensor 235: the 5 real isothermal series of
-/// <see cref="SeriesCountAnalysisData.FiveOriginal"/>, written out as 5 separate samples of
-/// 11 points each. X1 = pressure code, X2 = temperature code, Y = reference pressure.
-/// </summary>
 public static class Sensor235Samples
 {
-    /// <summary>15 °C.</summary>
     public static readonly DataTwoFact[] At15C =
     {
         new DataTwoFact { X1 = -1.05452, X2 = -709.6729, Y = 0 },
@@ -25,7 +19,6 @@ public static class Sensor235Samples
         new DataTwoFact { X1 = -61.78557, X2 = -709.6705, Y = 199.6824 },
     };
 
-    /// <summary>18 °C.</summary>
     public static readonly DataTwoFact[] At18C =
     {
         new DataTwoFact { X1 = -1.08806, X2 = -710.1902, Y = 0 },
@@ -41,7 +34,6 @@ public static class Sensor235Samples
         new DataTwoFact { X1 = -61.81788, X2 = -710.1867, Y = 199.6824 },
     };
 
-    /// <summary>21 °C.</summary>
     public static readonly DataTwoFact[] At21C =
     {
         new DataTwoFact { X1 = -1.11354, X2 = -710.7041, Y = 0 },
@@ -57,7 +49,6 @@ public static class Sensor235Samples
         new DataTwoFact { X1 = -61.84075, X2 = -710.7005, Y = 199.6824 },
     };
 
-    /// <summary>24.5 °C.</summary>
     public static readonly DataTwoFact[] At24_5C =
     {
         new DataTwoFact { X1 = -1.14896, X2 = -711.3016, Y = 0 },
@@ -73,7 +64,6 @@ public static class Sensor235Samples
         new DataTwoFact { X1 = -61.86921, X2 = -711.2987, Y = 199.6824 },
     };
 
-    /// <summary>28 °C.</summary>
     public static readonly DataTwoFact[] At28C =
     {
         new DataTwoFact { X1 = -1.18305, X2 = -711.8979, Y = 0 },
@@ -89,6 +79,5 @@ public static class Sensor235Samples
         new DataTwoFact { X1 = -61.89198, X2 = -711.895, Y = 199.6824 },
     };
 
-    /// <summary>All 5 samples, coldest first; the index is what the tests pass as "sample".</summary>
     public static readonly DataTwoFact[][] All = { At15C, At18C, At21C, At24_5C, At28C };
 }

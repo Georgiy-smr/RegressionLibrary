@@ -76,13 +76,12 @@ residuals ≤ τ while every removed point misses by > τ. τ = relativeToleranc
 - Don't replace the exhaustive search with "drop the largest residual and refit": least squares
   smears an end-point error or a shifted tail over the series.
 - Known limit: at ~10τ, several errors can come back `Ambiguous`, and on unevenly spaced
-  series an isolated end point can produce a confident but wrong `Outlier` set. The tests in
-  `SolversTests\OutlierDetection\` are relaxed accordingly (their class summary lists how); the
-  strict numbers are in the issue #21 comment.
-- Tests: `SinglePointSearchTests` / `TwoPointSearchTests` are the main, simple ones (visible
-  `Sensor235Samples`, `InlineData(index, codeError)`). The older `IsothermalSeriesOutlierDetectorTests`
-  still injects errors into Y and checks them in Y units, so 4 of its checks fail since the switch
-  to X1 = g(Y); reworking it is postponed by the owner.
+  series an isolated end point can produce a confident but wrong `Outlier` set (numbers in the
+  issue #21 comments).
+- Tests in `SolversTests\OutlierDetection\`: `SinglePointSearchTests`, `TwoPointSearchTests`,
+  `ExceptionTests`, on the visible `Sensor235Samples`, with errors added to X1 via
+  `InlineData`. The owner wants tests this simple and the new code without comments; add
+  further scenarios as separate classes only when asked.
 
 ## ApproximationCalculationError
 

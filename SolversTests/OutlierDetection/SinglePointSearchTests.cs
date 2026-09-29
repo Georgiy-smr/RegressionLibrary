@@ -2,16 +2,8 @@ using Regression.OutlierDetection;
 
 namespace SolversTests;
 
-/// <summary>
-/// Searching for one mis-loaded point in the sensor 235 sample at 15 °C (11 points): a clean
-/// sample gives an empty result; after an error is added to the pressure code of one point,
-/// that point is found with that same error.
-/// </summary>
 public class SinglePointSearchTests
 {
-    /// <summary>
-    /// The detector's τ for this sample: 5·10⁻⁵ × code range 60.73 ≈ 0.003 codes.
-    /// </summary>
     private const double CodeTolerance = 0.003;
 
     private readonly IsothermalSeriesOutlierDetector _detector = new();

@@ -2,11 +2,6 @@ using Regression.Two_factor_regression;
 
 namespace SolversTests;
 
-/// <summary>
-/// Sensors 223 and 224 calibration data, shared by the tests that need it.
-/// Each is 5 isothermal series of 11 consecutive points, from an Excel export
-/// (223.xlsx / 224.xlsx, Лист1, columns A/B/C = X1/X2/Y, rows 2-56).
-/// </summary>
 public static class Sensor223And224Data
 {
     public static readonly List<DataTwoFact> Data223 = new()

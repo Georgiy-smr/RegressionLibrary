@@ -4,28 +4,6 @@ using Regression.Two_factor_regression;
 
 namespace Regression.OutlierDetection;
 
-/// <summary>
-/// Finds mis-loaded points (wrong, forgotten or extra dead weight) in one isothermal
-/// calibration series, right after it is recorded, while the point can still be re-measured.
-///
-/// Y is the target pressure the loads are meant to reproduce; it goes into the model as recorded.
-/// X1 is the sensor's pressure code for the pressure actually reproduced. A loading mistake
-/// reproduces a different pressure, so it shows up as a wrong X1 at an unchanged Y. Within one
-/// temperature the characteristic X1 = g(Y) is smooth and nearly linear, so a 2nd-degree
-/// polynomial in Y describes a clean series down to the sensor noise, and the residual
-/// X1 − g(Y) is the error in the pressure code.
-///
-/// The detector searches exhaustively for the smallest set of points whose removal leaves the
-/// rest on such a curve with every residual ≤ τ, while every removed point misses the curve by
-/// more than τ. Exhaustive search, not "drop the largest residual and refit": least squares smears
-/// an error at an end point, or a shifted tail, over the whole series, so the largest residual is
-/// often at the wrong point.
-///
-/// Input convention (as used by the library's consumers): X1 = pressure code, X2 = temperature
-/// code (ignored — within a series it only drifts with pressure), Y = target (reference) pressure.
-/// All Y of a series must be on one scale (e.g. gauge pressure, vacuum negative); the detector
-/// knows nothing about units or reference gauges.
-/// </summary>
 public class IsothermalSeriesOutlierDetector
 {
     private const int Degree = 2;
@@ -34,15 +12,6 @@ public class IsothermalSeriesOutlierDetector
 
     private readonly double _relativeTolerance;
 
-    /// <param name="relativeTolerance">
-    /// Noise threshold τ as a fraction of the series' pressure-code range:
-    /// τ = relativeTolerance × (X1max − X1min). The default 5·10⁻⁵ is about 1.9× the worst
-    /// 2nd-degree residual seen on real series of sensors 223/224/235. τ is the sensor noise,
-    /// not "half a weight": with τ that large the curve absorbs an error at an end point.
-    /// Errors of about 50τ are found exactly; near 10τ several errors may come back as
-    /// <see cref="AmbiguousPoint"/>, or on unevenly spaced series even as a wrong
-    /// <see cref="Outlier"/> set.
-    /// </param>
     public IsothermalSeriesOutlierDetector(double relativeTolerance = 5e-5)
     {
         if (!(relativeTolerance > 0))
@@ -50,15 +19,6 @@ public class IsothermalSeriesOutlierDetector
         _relativeTolerance = relativeTolerance;
     }
 
-    /// <summary>
-    /// Returns the suspicious points of one isothermal series, sorted by <see cref="SuspiciousPoint.Index"/>.
-    /// Empty — the series is clean. All <see cref="Outlier"/> — the minimal outlier set is unique.
-    /// All <see cref="AmbiguousPoint"/> — several minimal sets fit equally well; their union is returned.
-    /// </summary>
-    /// <exception cref="ArgumentException">Fewer than 5 points, all X1 equal, or all Y equal.</exception>
-    /// <exception cref="SeriesNotResolvableException">
-    /// No set of at most min(4, n − 5) points explains the deviations.
-    /// </exception>
     public IReadOnlyList<SuspiciousPoint> GetSuspiciousPoints(IEnumerable<DataTwoFact> series)
     {
         if (series is null) throw new ArgumentNullException(nameof(series));
@@ -112,11 +72,6 @@ public class IsothermalSeriesOutlierDetector
         return true;
     }
 
-    /// <summary>
-    /// Fits the polynomial to every point not in <paramref name="removed"/> and returns the
-    /// residual X1 − g(Y) of every point of the series, or null if the kept points cannot
-    /// determine the polynomial (fewer than Degree + 1 distinct Y).
-    /// </summary>
     private static double[]? ResidualsWithout(int[] removed, Matrix<double> vandermonde, Vector<double> codes, DataTwoFact[] points)
     {
         var kept = Enumerable.Range(0, points.Length).Where(i => Array.IndexOf(removed, i) < 0).ToArray();
@@ -127,11 +82,6 @@ public class IsothermalSeriesOutlierDetector
         return (codes - vandermonde * coefficients).ToArray();
     }
 
-    /// <summary>
-    /// Vandermonde matrix over centered/scaled Y, so the fit stays well-conditioned
-    /// (no normal equations — see issue #5). Coefficients are never converted back to the
-    /// original basis: only predictions and residuals are needed.
-    /// </summary>
     private static Matrix<double> CenteredVandermonde(DataTwoFact[] points)
     {
         var mean = points.Average(p => p.Y);

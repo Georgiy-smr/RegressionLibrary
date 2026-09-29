@@ -2,14 +2,8 @@ using Regression.OutlierDetection;
 
 namespace SolversTests;
 
-/// <summary>
-/// Searching for two mis-loaded points in the sensor 235 sample at 15 °C (11 points): after
-/// errors are added to the pressure codes of two points, exactly those two points are found,
-/// each with its error.
-/// </summary>
 public class TwoPointSearchTests
 {
-    /// <summary>τ converted to codes for this sample (see <see cref="SinglePointSearchTests"/>).</summary>
     private const double CodeTolerance = 0.003;
 
     private readonly IsothermalSeriesOutlierDetector _detector = new();
