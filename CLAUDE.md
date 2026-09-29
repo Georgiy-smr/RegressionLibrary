@@ -87,8 +87,9 @@ default is 1.9× the worst series.
   `SinglePointSearchTests`, `TwoPointSearchTests`, plus `ExceptionTests`), method = sample
   (`Sensor235At15C`, `Sensor223Series1`, …), `InlineData` = where and how big the error is, in
   codes. Samples are visible in `Sensor235Samples` / `Sensor223Samples` / `Sensor224Samples`
-  (`Sensor223And224Data` is built from them). Scope is deliberately 0 / 1 / 2 errors + the
-  exception: more than 2 loading mistakes per series is rare. The owner wants tests this simple
+  (`Sensor223And224Data` is built from them). 0, 1 and 2 errors are tested on all 15 real
+  series (1 error: every position 0–10; 2 errors: 6 position pairs), plus the exception. Scope is
+  deliberately limited to that: more than 2 loading mistakes per series is rare. The owner wants tests this simple
   and the new code without comments; add scenarios only when asked.
 
 ## ApproximationCalculationError

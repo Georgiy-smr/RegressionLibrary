@@ -20,18 +20,144 @@ public class TwoPointSearchTests
         => AssertFound(Sensor235Samples.At15C, first, firstError, second, secondError);
 
     [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
     [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
     [InlineData(4, 0.15, 5, -0.15)]
-    [InlineData(0, 0.05, 5, -0.05)]
+    [InlineData(9, 0.1, 10, 0.1)]
+    public void Sensor235At18C(int first, double firstError, int second, double secondError)
+        => AssertFound(Sensor235Samples.At18C, first, firstError, second, secondError);
+
+    [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
+    [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
+    [InlineData(4, 0.15, 5, -0.15)]
+    [InlineData(9, 0.1, 10, 0.1)]
+    public void Sensor235At21C(int first, double firstError, int second, double secondError)
+        => AssertFound(Sensor235Samples.At21C, first, firstError, second, secondError);
+
+    [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
+    [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
+    [InlineData(4, 0.15, 5, -0.15)]
+    [InlineData(9, 0.1, 10, 0.1)]
+    public void Sensor235At24_5C(int first, double firstError, int second, double secondError)
+        => AssertFound(Sensor235Samples.At24_5C, first, firstError, second, secondError);
+
+    [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
+    [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
+    [InlineData(4, 0.15, 5, -0.15)]
+    [InlineData(9, 0.1, 10, 0.1)]
+    public void Sensor235At28C(int first, double firstError, int second, double secondError)
+        => AssertFound(Sensor235Samples.At28C, first, firstError, second, secondError);
+
+    [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
+    [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
+    [InlineData(4, 0.15, 5, -0.15)]
+    [InlineData(9, 0.1, 10, 0.1)]
     public void Sensor223Series1(int first, double firstError, int second, double secondError)
         => AssertFound(Sensor223Samples.Series1, first, firstError, second, secondError);
 
     [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
     [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
     [InlineData(4, 0.15, 5, -0.15)]
-    [InlineData(0, 0.05, 5, -0.05)]
+    [InlineData(9, 0.1, 10, 0.1)]
+    public void Sensor223Series2(int first, double firstError, int second, double secondError)
+        => AssertFound(Sensor223Samples.Series2, first, firstError, second, secondError);
+
+    [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
+    [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
+    [InlineData(4, 0.15, 5, -0.15)]
+    [InlineData(9, 0.1, 10, 0.1)]
+    public void Sensor223Series3(int first, double firstError, int second, double secondError)
+        => AssertFound(Sensor223Samples.Series3, first, firstError, second, secondError);
+
+    [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
+    [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
+    [InlineData(4, 0.15, 5, -0.15)]
+    [InlineData(9, 0.1, 10, 0.1)]
+    public void Sensor223Series4(int first, double firstError, int second, double secondError)
+        => AssertFound(Sensor223Samples.Series4, first, firstError, second, secondError);
+
+    [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
+    [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
+    [InlineData(4, 0.15, 5, -0.15)]
+    [InlineData(9, 0.1, 10, 0.1)]
+    public void Sensor223Series5(int first, double firstError, int second, double secondError)
+        => AssertFound(Sensor223Samples.Series5, first, firstError, second, secondError);
+
+    [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
+    [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
+    [InlineData(4, 0.15, 5, -0.15)]
+    [InlineData(9, 0.1, 10, 0.1)]
     public void Sensor224Series1(int first, double firstError, int second, double secondError)
         => AssertFound(Sensor224Samples.Series1, first, firstError, second, secondError);
+
+    [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
+    [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
+    [InlineData(4, 0.15, 5, -0.15)]
+    [InlineData(9, 0.1, 10, 0.1)]
+    public void Sensor224Series2(int first, double firstError, int second, double secondError)
+        => AssertFound(Sensor224Samples.Series2, first, firstError, second, secondError);
+
+    [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
+    [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
+    [InlineData(4, 0.15, 5, -0.15)]
+    [InlineData(9, 0.1, 10, 0.1)]
+    public void Sensor224Series3(int first, double firstError, int second, double secondError)
+        => AssertFound(Sensor224Samples.Series3, first, firstError, second, secondError);
+
+    [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
+    [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
+    [InlineData(4, 0.15, 5, -0.15)]
+    [InlineData(9, 0.1, 10, 0.1)]
+    public void Sensor224Series4(int first, double firstError, int second, double secondError)
+        => AssertFound(Sensor224Samples.Series4, first, firstError, second, secondError);
+
+    [Theory]
+    [InlineData(0, 0.15, 1, 0.15)]
+    [InlineData(0, 0.15, 10, -0.15)]
+    [InlineData(2, 0.05, 8, -0.05)]
+    [InlineData(3, -0.1, 7, 0.1)]
+    [InlineData(4, 0.15, 5, -0.15)]
+    [InlineData(9, 0.1, 10, 0.1)]
+    public void Sensor224Series5(int first, double firstError, int second, double secondError)
+        => AssertFound(Sensor224Samples.Series5, first, firstError, second, secondError);
 
     [Fact]
     public void Sensor235At15C_GrossEndErrorDoesNotHideSmallError()

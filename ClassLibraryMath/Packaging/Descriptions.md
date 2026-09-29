@@ -71,8 +71,9 @@ half a weight: with a τ that large the curve absorbs an error at an end point.
 series: sensor 235 0.23–1.29·10⁻⁵, 223 1.85–2.22·10⁻⁵, 224 1.73–2.59·10⁻⁵. The default 5·10⁻⁵ is
 1.9× the worst of them (224, series 5).
 
-**Tested scope.** Clean series of 3 sensors (all 15 real series); 1 and 2 errors at the ends and
-in the middle on one series of each sensor; 6 errors → exception. Up to 4 errors are supported by
+**Tested scope.** All 15 real series of 3 sensors: each clean series; 1 error at every position
+0–10 (±0.05 and ±0.15 codes); 2 errors at 6 position pairs (both ends, neighbours, end + neighbour,
+spread apart); 6 errors → exception. Up to 4 errors are supported by
 the algorithm, but more than 2 are deliberately not tested, because an operator rarely makes more
 than two loading mistakes in one series.
 
