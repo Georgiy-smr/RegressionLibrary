@@ -134,6 +134,57 @@ lives here; the app only calls it and shows the result.
   `Sensor235Dataset`: the 5 sensor-235 samples at 15/18/21/24.5/28 °C, rows 0–54 in that order,
   with a fixed per-point temperature jitter whose median is 0, so the nominals are 15, 18, 21,
   25, 28.
+- The splitting and the nominal temperature live in the internal `TemperatureSeriesSplitter`,
+  shared with `SectorSensorCharacterizer`.
+
+## SectorCompensation (issue #26, experimental)
+
+`Regression.SectorCompensation`, `ClassLibraryMath\SectorCompensation\`. A sector-based pressure
+compensation method, compared with our method on sensor No. 00249979. The algorithm is described
+step by step in [`docs\SectorSensorAlgorithm.md`](docs/SectorSensorAlgorithm.md) (in Russian); a
+colleague reproduces it in Excel from that document, so `SectorSensor.GetPressure` must keep
+matching it. Units don't matter to the method; don't mention them in code or tests.
+
+- `ISensorModel.GetPressure(pressureCode, temperatureCode)` is the common contract. A model only
+  stores coefficients; fitting is done by an `ISensorCharacterizer`
+  (`Characterize(IEnumerable<CalibrationPoint>)`). No static factory methods.
+- `PolynomialSensor` / `PolynomialSensorCharacterizer` — our method: 16 pressure + 9 temperature
+  coefficients, both fitted by `PolynomialLeastSquaresSolver` on the same points (Y = pressure /
+  temperature) and evaluated through `TwoFactorPolynomialValue`.
+- `SectorSensor` / `SectorSensorCharacterizer`:
+  1. Rough stage: the embedded `PolynomialSensor` gives rough P and T from both codes.
+  2. Triangle selection in (P, T): first triangle in storage order that contains the point (edges
+     count as inside); outside the grid, the triangle with the nearest centre, in coordinates
+     normalized by the grid range.
+  3. Fine stage: sector polynomial `code = c0 + c1·dP + c2·dT + c3·dP² + c4·dT² + c5·dP·dT` from
+     the sector's anchor node, solved for dP in closed form (no iterations), root closest to the
+     rough dP.
+  4. One refinement: if the resulting (P, T) is inside a different triangle, step 3 is repeated
+     there.
+- Grid: series are split like in `CalibrationDatasetChecker`; nodes per axis must be odd and ≥ 3,
+  and all series must have the same pressures (`ArgumentException`). Node coordinates are the
+  reference pressure and the temperature **computed by the rough-stage temperature polynomial**
+  from the node's codes (not the nominal), so characterization and operation use the same
+  temperature. Quadrants of 2×2 cells are cut by the diagonal into a lower and an upper triangle
+  with 6 nodes each; the coefficients are the exact 6×6 solution. Sectors are numbered from 1,
+  along pressure first, then temperature, lower (odd) before upper (even), as in the document.
+- `SectorSensor.Trace` returns the rough P and T, the number of the sector that produced the
+  result and the final pressure; `RoughSensor` and `Sectors` are exported for Excel by the
+  `SectorSensorCoefficientsReport` test.
+- Tests: `SolversTests\SensorComparison\` (`NodeTests`, `ContinuityTests`,
+  `SyntheticQuadraticTests`, `UniformGridFormulaTests`, `GridValidationTests`,
+  `WorkedExampleTests` = points А, Б, В of the document, `SensorComparisonTests`). Data:
+  `Sensor00249979Dataset` (55 calibration points) and `Sensor00249979ValidationGrid` (9 × 31).
+- Comparison on the 224 validation points outside the calibration sample (error in units of the
+  reference pressure; asserted against the Python prototype within 0.0002):
+
+  | Variant | Coefficients | Max error | Mean error |
+  |---|---|---|---|
+  | PolynomialSensor | 25 | 0.0037 | 0.0010 |
+  | SectorSensor 5×11 | 145 | 0.0046 | 0.0011 |
+  | SectorSensor 5×5 (pressure nodes 0, 2, 4, 7, 10) | 73 | 0.0126 | 0.0040 |
+
+- `ClassLibraryMath\Packaging\Descriptions.md` is not updated while the method is experimental.
 
 ## ApproximationCalculationError
 
@@ -179,6 +230,8 @@ either way.
   leave-one-series-out test is intentionally red.
 - [#24](https://github.com/Georgiy-smr/RegressionLibrary/issues/24): `CalibrationDatasetChecker`
   for a whole dataset (see above). #21 (the single-series detector) is closed.
+- [#26](https://github.com/Georgiy-smr/RegressionLibrary/issues/26): sector compensation method
+  and its comparison with the polynomial method (see above).
 
 ## Workflow conventions observed in this repo's history
 

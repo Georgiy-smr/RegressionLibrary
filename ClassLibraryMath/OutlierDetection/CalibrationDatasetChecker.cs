@@ -23,33 +23,16 @@ public class CalibrationDatasetChecker
         if (dataset is null) throw new ArgumentNullException(nameof(dataset));
         var points = dataset.ToArray();
 
-        var series = SplitIntoSeries(points)
+        var series = TemperatureSeriesSplitter.SplitIntoSeries(points, _seriesTemperatureGap)
             .Select(rows => CheckSeries(points, rows))
             .OrderBy(check => check.NominalTemperature)
             .ToList();
         return new DatasetCheckResult(series);
     }
 
-    private IEnumerable<int[]> SplitIntoSeries(CalibrationPoint[] points)
-    {
-        var byTemperature = Enumerable.Range(0, points.Length).OrderBy(row => points[row].Temperature).ThenBy(row => row).ToArray();
-        var current = new List<int>();
-        foreach (var row in byTemperature)
-        {
-            if (current.Count > 0 && points[row].Temperature - points[current[^1]].Temperature > _seriesTemperatureGap)
-            {
-                yield return current.OrderBy(r => r).ToArray();
-                current = new List<int>();
-            }
-            current.Add(row);
-        }
-        if (current.Count > 0)
-            yield return current.OrderBy(r => r).ToArray();
-    }
-
     private SeriesCheck CheckSeries(CalibrationPoint[] points, int[] rows)
     {
-        var nominal = Math.Round(Median(rows.Select(row => points[row].Temperature)), MidpointRounding.AwayFromZero);
+        var nominal = TemperatureSeriesSplitter.NominalTemperature(points, rows);
         var series = rows
             .Select(row => new DataTwoFact { X1 = points[row].PressureCode, X2 = points[row].TemperatureCode, Y = points[row].Pressure })
             .ToArray();
@@ -69,12 +52,5 @@ public class CalibrationDatasetChecker
         {
             return new SkippedSeries(nominal, rows, exception.Message);
         }
-    }
-
-    private static double Median(IEnumerable<double> values)
-    {
-        var sorted = values.OrderBy(value => value).ToArray();
-        var middle = sorted.Length / 2;
-        return sorted.Length % 2 == 1 ? sorted[middle] : (sorted[middle - 1] + sorted[middle]) / 2;
     }
 }
