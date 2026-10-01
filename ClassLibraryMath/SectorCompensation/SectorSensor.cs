@@ -40,10 +40,10 @@ public sealed class SectorSensor : ISensorModel
         var roughPressure = RoughSensor.GetPressure(pressureCode, temperatureCode);
         var temperature = RoughSensor.GetTemperature(pressureCode, temperatureCode);
 
-        var sector = FindContaining(roughPressure, temperature) ?? FindNearest(roughPressure, temperature);
+        var sector = FindSector(roughPressure, temperature) ?? FindNearest(roughPressure, temperature);
         var pressure = SolvePressure(sector, pressureCode, temperature, roughPressure);
 
-        var refined = FindContaining(pressure, temperature);
+        var refined = FindSector(pressure, temperature);
         if (refined is not null && refined.Number != sector.Number)
         {
             sector = refined;
@@ -53,7 +53,7 @@ public sealed class SectorSensor : ISensorModel
         return new SectorTrace(roughPressure, temperature, sector.Number, pressure);
     }
 
-    private Sector? FindContaining(double pressure, double temperature)
+    public Sector? FindSector(double pressure, double temperature)
         => _sectors.FirstOrDefault(sector => Contains(sector, pressure, temperature));
 
     private static bool Contains(Sector sector, double pressure, double temperature)

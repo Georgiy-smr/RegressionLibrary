@@ -59,16 +59,14 @@ public class Sensor235ComparisonTests
     private void Report(string variant, ISensorModel model, CalibrationPoint[] validation, int coefficientCount, int storedValueCount)
     {
         var counts = Counts(model);
-        var errors = validation
-            .Select(point => (point.Temperature, Error: Math.Abs(point.Pressure - model.GetPressure(point.PressureCode, point.TemperatureCode))))
-            .ToArray();
+        var error = new SensorModelError(model, validation);
 
         _output.WriteLine($"{variant}: {counts.Coefficients} coefficients, {counts.StoredValues} stored values");
         _output.WriteLine("| Temperature | Points | Max error | Mean error |");
         _output.WriteLine("|---|---|---|---|");
-        foreach (var series in errors.GroupBy(error => error.Temperature).OrderBy(series => series.Key))
-            _output.WriteLine(Invariant($"| {series.Key} | {series.Count()} | {series.Max(error => error.Error):F4} | {series.Average(error => error.Error):F4} |"));
-        _output.WriteLine(Invariant($"| all | {errors.Length} | {errors.Max(error => error.Error):F4} | {errors.Average(error => error.Error):F4} |"));
+        foreach (var series in error.GetBySeries())
+            _output.WriteLine(Invariant($"| {series.Temperature} | {series.Count} | {series.Max:F4} | {series.Mean:F4} |"));
+        _output.WriteLine(Invariant($"| all | {validation.Length} | {error.GetMax():F4} | {error.GetMean():F4} |"));
         if (model is SectorSensor sectorSensor)
             ReportSectorSelection(sectorSensor, validation);
 
@@ -79,31 +77,14 @@ public class Sensor235ComparisonTests
     private void ReportSectorSelection(SectorSensor sensor, CalibrationPoint[] validation)
     {
         var traces = validation.Select(point => (Point: point, Trace: sensor.Trace(point.PressureCode, point.TemperatureCode))).ToArray();
-        var roughOutsideGrid = traces.Count(x => SectorOf(sensor, x.Trace.RoughPressure, x.Trace.RoughTemperature) == 0);
-        var roughSectorDiffers = traces.Count(x => SectorOf(sensor, x.Trace.RoughPressure, x.Trace.RoughTemperature) != x.Trace.SectorNumber);
-        var referenceSectorDiffers = traces.Count(x => !Contains(sensor.Sectors[x.Trace.SectorNumber - 1], x.Point.Pressure, x.Trace.RoughTemperature));
+        var roughOutsideGrid = traces.Count(x => sensor.FindSector(x.Trace.RoughPressure, x.Trace.RoughTemperature) is null);
+        var roughSectorDiffers = traces.Count(x => sensor.FindSector(x.Trace.RoughPressure, x.Trace.RoughTemperature)?.Number != x.Trace.SectorNumber);
         var roughPressureError = traces.Max(x => Math.Abs(x.Trace.RoughPressure - x.Point.Pressure));
         var roughTemperatureError = traces.Max(x => Math.Abs(x.Trace.RoughTemperature - x.Point.Temperature));
 
         _output.WriteLine(Invariant($"Rough stage: max pressure error {roughPressureError:F4}, max temperature error {roughTemperatureError:F4}"));
         _output.WriteLine($"Rough point outside the grid: {roughOutsideGrid} of {traces.Length}");
-        _output.WriteLine($"Rough point in a different sector than the final pressure: {roughSectorDiffers} of {traces.Length}");
-        _output.WriteLine($"Reference pressure outside the sector that produced the result: {referenceSectorDiffers} of {traces.Length}");
-    }
-
-    private static int SectorOf(SectorSensor sensor, double pressure, double temperature)
-        => sensor.Sectors.FirstOrDefault(sector => Contains(sector, pressure, temperature))?.Number ?? 0;
-
-    private static bool Contains(Sector sector, double pressure, double temperature)
-    {
-        var s1 = Side(sector.Vertex1, sector.Vertex2, pressure, temperature);
-        var s2 = Side(sector.Vertex2, sector.Vertex3, pressure, temperature);
-        var s3 = Side(sector.Vertex3, sector.Vertex1, pressure, temperature);
-        return (s1 >= 0 && s2 >= 0 && s3 >= 0) || (s1 <= 0 && s2 <= 0 && s3 <= 0);
-    }
-
-    private static double Side(SectorNode from, SectorNode to, double pressure, double temperature)
-        => (to.Pressure - from.Pressure) * (temperature - from.Temperature) - (to.Temperature - from.Temperature) * (pressure - from.Pressure);
+        _output.WriteLine($"Rough point in a different sector than the final pressure: {roughSectorDiffers} of {traces.Length}");    }
 
     private static (int Coefficients, int StoredValues) Counts(ISensorModel model) => model switch
     {

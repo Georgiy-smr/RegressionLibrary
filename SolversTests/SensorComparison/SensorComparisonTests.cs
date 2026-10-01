@@ -28,21 +28,19 @@ public class SensorComparisonTests
     {
         var model = Variants[variant].Characterize(Sensor00249979Dataset.Points);
         var validation = Sensor00249979ValidationGrid.Points.Except(Sensor00249979Dataset.Points).ToArray();
-        var errors = validation
-            .Select(point => (point.Temperature, Error: Math.Abs(point.Pressure - model.GetPressure(point.PressureCode, point.TemperatureCode))))
-            .ToArray();
+        var error = new SensorModelError(model, validation);
 
         _output.WriteLine($"{variant}, {CoefficientCount(model)} coefficients");
         _output.WriteLine("| Temperature | Points | Max error | Mean error |");
         _output.WriteLine("|---|---|---|---|");
-        foreach (var series in errors.GroupBy(error => error.Temperature).OrderBy(series => series.Key))
-            _output.WriteLine(Invariant($"| {series.Key} | {series.Count()} | {series.Max(error => error.Error):F4} | {series.Average(error => error.Error):F4} |"));
-        _output.WriteLine(Invariant($"| all | {errors.Length} | {errors.Max(error => error.Error):F6} | {errors.Average(error => error.Error):F6} |"));
+        foreach (var series in error.GetBySeries())
+            _output.WriteLine(Invariant($"| {series.Temperature} | {series.Count} | {series.Max:F4} | {series.Mean:F4} |"));
+        _output.WriteLine(Invariant($"| all | {validation.Length} | {error.GetMax():F6} | {error.GetMean():F6} |"));
 
         Assert.Equal(224, validation.Length);
         Assert.Equal(coefficientCount, CoefficientCount(model));
-        Assert.InRange(Math.Abs(errors.Max(error => error.Error) - maxError), 0, PrototypeTolerance);
-        Assert.InRange(Math.Abs(errors.Average(error => error.Error) - meanError), 0, PrototypeTolerance);
+        Assert.InRange(Math.Abs(error.GetMax() - maxError), 0, PrototypeTolerance);
+        Assert.InRange(Math.Abs(error.GetMean() - meanError), 0, PrototypeTolerance);
     }
 
     private static int CoefficientCount(ISensorModel model) => model switch
