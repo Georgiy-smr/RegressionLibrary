@@ -198,10 +198,10 @@ var sensor = new SectorSensor(new PolynomialSensor(pressureCoefficients, tempera
   `GetCurrent(point)` = |reference pressure − `GetPressure`|, `GetMax()`, `GetMean()`, and
   `GetBySeries()` with the count, max and mean per distinct `Temperature` value.
 
-**Measured on real data** (max error on points the models were not fitted on, in units of the
-reference pressure). Sensor 00249979, 5 temperatures × 11 pressures, 224 validation points between
-the calibration points: polynomial 0.0037, sectors 5×11 0.0046. Sensor 235, validation at the
-calibration temperatures on the pressures that are not grid nodes: polynomial 0.0062, sectors 5×5
-0.0027. The sector method follows offsets between series that a smooth polynomial cannot, but it
-needs 12 stored numbers per sector, and neither method predicts a temperature that was not
-calibrated better than the other.
+**Measured on real data** (max error in units of the reference pressure). Sensor 00249979,
+5 temperatures × 11 pressures, 224 validation points between the calibration points: polynomial
+0.0037, sectors 5×11 0.0046. Sensor 235, validation at the calibration temperatures on the
+pressures that are not grid nodes: polynomial 0.0062 (fitted on all points, including these),
+sectors 5×5 0.0027. The sector method follows offsets between series that a smooth polynomial
+cannot, but it needs 12 stored numbers per sector. Between calibrated temperatures, the sector
+method gave no gain over the polynomial on either sensor.
