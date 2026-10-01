@@ -169,24 +169,32 @@ matching it. Units don't matter to the method; don't mention them in code or tes
   with 6 nodes each; the coefficients are the exact 6×6 solution. Sectors are numbered from 1,
   along pressure first, then temperature, lower (odd) before upper (even), as in the document.
 - `SectorSensor.Trace` returns the rough P and T, the number of the sector that produced the
-  result and the final pressure; `RoughSensor` and `Sectors` are exported for Excel by the
-  `SectorSensorCoefficientsReport` test.
-- Flat array (issue #28): the consumer (TwoFactRegressCalc) gets the result as one flat array,
-  as with `IPolynomialFitService.GetValues`, and formats it itself. `SectorSensor.Values`
-  (`IReadOnlyList<double>`, 25 + 12 × number of sectors: 265 for 5×11, 121 for 5×5):
+  result and the final pressure.
+- Stored coefficients (issue #28): the result of a characterization is what `SectorSensor` holds,
+  and the consumer (TwoFactRegressCalc) takes the coefficients from it and saves them anywhere
+  (Excel, file, sensor). `GetPressure` is mainly for checking our methods inside the library.
+  This is independent of the legacy path: no `DataTwoFact`, `IPolynomialFitService` or
+  `GetValues`. Two tables:
 
-  | Positions (0-based) | Content |
-  |---|---|
-  | 0–15 | rough pressure coefficients a0…a15 (`TwoFactorPolynomialValue` order) |
-  | 16–24 | rough temperature coefficients b0…b8 |
-  | 25 + 12·(k − 1) … + 5 | sector k (1-based): P1, T1, P2, T2, P3, T3 |
-  | 25 + 12·(k − 1) + 6 … + 11 | sector k: c0…c5 |
+  | Table | Source | Content |
+  |---|---|---|
+  | Rough stage | `SectorSensor.RoughSensor` (`PolynomialSensor`) | `PressureCoefficients` a0…a15, `TemperatureCoefficients` b0…b8 (`TwoFactorPolynomialValue` order) |
+  | Sector table | `SectorSensor.Sectors`, one `Sector` per row, in the order of their numbers | N, P1, T1, P2, T2, P3, T3, c0…c5 |
 
-  The first 25 numbers are `PolynomialSensor.Values`, each block of 12 is `Sector.Values`. The
-  anchor node is not in the array (it always equals vertex 1), nor is the sector number (it is
-  the position in the list). `SectorFitService(SectorSensorCharacterizer).GetValues(points)`
-  characterizes the points and returns `SectorSensor.Values`; it deliberately does not implement
-  `IPolynomialFitService`, which takes `DataTwoFact` without a reference temperature.
+  - `Sector` (immutable record): `Number` (1-based = position in `Sectors` + 1), `Vertex1`,
+    `Vertex2`, `Vertex3` (`SectorNode(Pressure, Temperature)`), `Coefficients` (exactly 6,
+    otherwise `ArgumentException`). **`Vertex1` is the anchor node**: dP and dT are measured from
+    it, there is no separate P0, T0.
+  - `Sector.Values` = the 12 numbers of the row after N: P1, T1, P2, T2, P3, T3, c0…c5.
+  - `SectorSensor.StoredValueCount` = 25 + 12 × number of sectors (265 for 5×11, 121 for 5×5):
+    how many numbers have to be stored for the sensor to work. `CoefficientCount` keeps its
+    meaning (25 + 6 × sectors).
+  - Rebuilding from saved values: `new SectorSensor(new PolynomialSensor(pressure, temperature),
+    sectors)`, each sector as `new Sector(number, vertex1, vertex2, vertex3, coefficients)` from
+    its saved row. The constructor checks that the sector numbers are 1, 2, 3, … in order
+    (`ArgumentException`). `SectorValuesTests` checks that the rebuilt sensor gives bitwise the
+    same `GetPressure` on all 279 points of the validation grid.
+  - The `SectorSensorCoefficientsReport` test prints both tables tab-separated for Excel.
 - Tests: `SolversTests\SensorComparison\` (`NodeTests`, `ContinuityTests`,
   `SyntheticQuadraticTests`, `UniformGridFormulaTests`, `GridValidationTests`,
   `WorkedExampleTests` = points А, Б, В of the document, `SensorComparisonTests`,
@@ -247,8 +255,8 @@ either way.
   leave-one-series-out test is intentionally red.
 - [#24](https://github.com/Georgiy-smr/RegressionLibrary/issues/24): `CalibrationDatasetChecker`
   for a whole dataset (see above). #21 (the single-series detector) is closed.
-- [#28](https://github.com/Georgiy-smr/RegressionLibrary/issues/28): flat coefficient array for
-  the sector method (see above). #26 (the sector method itself) is closed.
+- [#28](https://github.com/Georgiy-smr/RegressionLibrary/issues/28): convenient access to the
+  sector method's coefficients (see above). #26 (the sector method itself) is closed.
 
 ## Workflow conventions observed in this repo's history
 

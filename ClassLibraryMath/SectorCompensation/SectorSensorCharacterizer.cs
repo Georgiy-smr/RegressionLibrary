@@ -92,9 +92,9 @@ public sealed class SectorSensorCharacterizer : ISensorCharacterizer
             return new[] { 1, dP, dT, dP * dP, dT * dT, dP * dT };
         }));
         var codes = Vector<double>.Build.DenseOfEnumerable(sectorNodes.Select(node => node.PressureCode));
-        var c = matrix.Solve(codes);
+        var coefficients = matrix.Solve(codes);
 
-        return new Sector(number, Vertex(sectorNodes[0]), Vertex(sectorNodes[0]), Vertex(sectorNodes[2]), Vertex(sectorNodes[5]), c[0], c[1], c[2], c[3], c[4], c[5]);
+        return new Sector(number, Vertex(sectorNodes[0]), Vertex(sectorNodes[2]), Vertex(sectorNodes[5]), coefficients);
     }
 
     private static SectorNode Vertex(Node node) => new(node.Pressure, node.Temperature);
