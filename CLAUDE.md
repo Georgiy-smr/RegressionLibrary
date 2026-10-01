@@ -268,8 +268,12 @@ validation on series 18 and 24.5 (22 points).
   rough stage of both sector variants. Sector selection survives it, because 0.45 is small next
   to the pressure step of the grid (about 20 for 3×11, about 40 for 3×5) and the refinement step
   corrects the rest. The rough point is in a different sector than the final pressure (or
-  outside the grid) for 6 of 22 points (3×11) and 3 of 22 (3×5). The rough temperature is off by
-  at most 0.0073.
+  outside the grid) for 6 of 22 points (3×11) and 3 of 22 (3×5); the sector that produced the
+  result does not contain the reference pressure for 0 of 22 (3×11) and 1 of 22 (3×5). The rough
+  temperature is off by at most 0.0073. The second count asks whether one given sector contains
+  the point, so the test calls `FindSector` on a sensor holding only that sector: on the whole
+  sensor a reference pressure equal to a node pressure lies on a shared edge and is attributed
+  to the lower-numbered sector (that would give 8 and 3 of 22).
 
 ## ApproximationCalculationError
 

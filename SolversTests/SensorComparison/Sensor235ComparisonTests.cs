@@ -79,12 +79,21 @@ public class Sensor235ComparisonTests
         var traces = validation.Select(point => (Point: point, Trace: sensor.Trace(point.PressureCode, point.TemperatureCode))).ToArray();
         var roughOutsideGrid = traces.Count(x => sensor.FindSector(x.Trace.RoughPressure, x.Trace.RoughTemperature) is null);
         var roughSectorDiffers = traces.Count(x => sensor.FindSector(x.Trace.RoughPressure, x.Trace.RoughTemperature)?.Number != x.Trace.SectorNumber);
+        var referenceOutsideSector = traces.Count(x => OnlySector(sensor, x.Trace.SectorNumber).FindSector(x.Point.Pressure, x.Trace.RoughTemperature) is null);
         var roughPressureError = traces.Max(x => Math.Abs(x.Trace.RoughPressure - x.Point.Pressure));
         var roughTemperatureError = traces.Max(x => Math.Abs(x.Trace.RoughTemperature - x.Point.Temperature));
 
         _output.WriteLine(Invariant($"Rough stage: max pressure error {roughPressureError:F4}, max temperature error {roughTemperatureError:F4}"));
         _output.WriteLine($"Rough point outside the grid: {roughOutsideGrid} of {traces.Length}");
-        _output.WriteLine($"Rough point in a different sector than the final pressure: {roughSectorDiffers} of {traces.Length}");    }
+        _output.WriteLine($"Rough point in a different sector than the final pressure: {roughSectorDiffers} of {traces.Length}");
+        _output.WriteLine($"Reference pressure outside the sector that produced the result: {referenceOutsideSector} of {traces.Length}");
+    }
+
+    private static SectorSensor OnlySector(SectorSensor sensor, int number)
+    {
+        var sector = sensor.Sectors[number - 1];
+        return new SectorSensor(sensor.RoughSensor, new[] { new Sector(1, sector.Vertex1, sector.Vertex2, sector.Vertex3, sector.Coefficients) });
+    }
 
     private static (int Coefficients, int StoredValues) Counts(ISensorModel model) => model switch
     {
