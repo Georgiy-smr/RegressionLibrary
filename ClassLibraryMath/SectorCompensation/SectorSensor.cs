@@ -16,6 +16,9 @@ public sealed class SectorSensor : ISensorModel
         _sectors = sectors.ToArray();
         if (_sectors.Length == 0)
             throw new ArgumentException("The sensor must have at least one sector.", nameof(sectors));
+        for (var index = 0; index < _sectors.Length; index++)
+            if (_sectors[index].Number != index + 1)
+                throw new ArgumentException($"Sector numbers must be 1, 2, 3, … in order, but the sector at position {index + 1} has number {_sectors[index].Number}.", nameof(sectors));
 
         var vertices = _sectors.SelectMany(Vertices).ToArray();
         _pressureRange = vertices.Max(vertex => vertex.Pressure) - vertices.Min(vertex => vertex.Pressure);
@@ -27,6 +30,8 @@ public sealed class SectorSensor : ISensorModel
     public IReadOnlyList<Sector> Sectors => _sectors;
 
     public int CoefficientCount => RoughSensor.CoefficientCount + 6 * _sectors.Length;
+
+    public int StoredValueCount => RoughSensor.CoefficientCount + 12 * _sectors.Length;
 
     public double GetPressure(double pressureCode, double temperatureCode) => Trace(pressureCode, temperatureCode).Pressure;
 
@@ -89,13 +94,15 @@ public sealed class SectorSensor : ISensorModel
 
     private static double SolvePressure(Sector sector, double pressureCode, double temperature, double nearPressure)
     {
-        var dT = temperature - sector.Anchor.Temperature;
-        var a = sector.C3;
-        var b = sector.C1 + sector.C5 * dT;
-        var c = sector.C0 + sector.C2 * dT + sector.C4 * dT * dT - pressureCode;
+        var anchor = sector.Vertex1;
+        var coefficients = sector.Coefficients;
+        var dT = temperature - anchor.Temperature;
+        var a = coefficients[3];
+        var b = coefficients[1] + coefficients[5] * dT;
+        var c = coefficients[0] + coefficients[2] * dT + coefficients[4] * dT * dT - pressureCode;
 
         if (Math.Abs(a) <= LinearEquationThreshold * Math.Abs(b))
-            return sector.Anchor.Pressure - c / b;
+            return anchor.Pressure - c / b;
 
         var discriminant = b * b - 4 * a * c;
         if (discriminant < 0)
@@ -104,9 +111,9 @@ public sealed class SectorSensor : ISensorModel
         var q = -(b + Math.Sign(b) * Math.Sqrt(discriminant)) / 2;
         var root1 = q / a;
         var root2 = c / q;
-        var nearDp = nearPressure - sector.Anchor.Pressure;
+        var nearDp = nearPressure - anchor.Pressure;
         var dP = Math.Abs(root1 - nearDp) <= Math.Abs(root2 - nearDp) ? root1 : root2;
-        return sector.Anchor.Pressure + dP;
+        return anchor.Pressure + dP;
     }
 
     private static IEnumerable<SectorNode> Vertices(Sector sector)

@@ -18,12 +18,12 @@ public class UniformGridFormulaTests
 
         var sector = sensor.Sectors[0];
 
-        AssertClose(F(0, 0), sector.C0);
-        AssertClose((4 * F(1, 0) - F(2, 0) - 3 * F(0, 0)) / (2 * HP), sector.C1);
-        AssertClose((4 * F(0, 1) - F(0, 2) - 3 * F(0, 0)) / (2 * HT), sector.C2);
-        AssertClose((F(2, 0) - 2 * F(1, 0) + F(0, 0)) / (2 * HP * HP), sector.C3);
-        AssertClose((F(0, 2) - 2 * F(0, 1) + F(0, 0)) / (2 * HT * HT), sector.C4);
-        AssertClose((F(1, 1) - F(1, 0) - F(0, 1) + F(0, 0)) / (HP * HT), sector.C5);
+        AssertClose(F(0, 0), sector.Coefficients[0]);
+        AssertClose((4 * F(1, 0) - F(2, 0) - 3 * F(0, 0)) / (2 * HP), sector.Coefficients[1]);
+        AssertClose((4 * F(0, 1) - F(0, 2) - 3 * F(0, 0)) / (2 * HT), sector.Coefficients[2]);
+        AssertClose((F(2, 0) - 2 * F(1, 0) + F(0, 0)) / (2 * HP * HP), sector.Coefficients[3]);
+        AssertClose((F(0, 2) - 2 * F(0, 1) + F(0, 0)) / (2 * HT * HT), sector.Coefficients[4]);
+        AssertClose((F(1, 1) - F(1, 0) - F(0, 1) + F(0, 0)) / (HP * HT), sector.Coefficients[5]);
     }
 
     private static void AssertClose(double expected, double actual)
