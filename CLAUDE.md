@@ -170,6 +170,22 @@ matching it. Units don't matter to the method; don't mention them in code or tes
   along pressure first, then temperature, lower (odd) before upper (even), as in the document.
 - `SectorSensor.Trace` returns the rough P and T, the number of the sector that produced the
   result and the final pressure.
+- `SectorSensor.FindSector(pressure, temperature)` (issue #32) returns the first sector in
+  `Sectors` order whose triangle contains the point (edges count as inside), or `null` outside
+  the grid; no fallback to the nearest sector. `Trace` uses it, so it is the only
+  point-in-triangle implementation. A point exactly on a shared edge (e.g. a node pressure)
+  belongs to the lower-numbered sector.
+- `SensorModelError(ISensorModel model, IEnumerable<CalibrationPoint> points)` (issue #32) is the
+  error analysis for the new path, for any `ISensorModel`; the legacy
+  `ApproximationCalculationError` stays as it is. `GetCurrent(point)` =
+  |point.Pressure − model.GetPressure(codes)|; `GetMax()` / `GetMean()` = max / mean of it over the
+  stored points; `GetBySeries()` = one `SeriesError(Temperature, Count, Max, Mean)` per distinct
+  `Temperature`, ordered by temperature. Grouping is by exact equality of
+  `CalibrationPoint.Temperature`, not by `TemperatureSeriesSplitter` (the validation grid has
+  series 1.5 apart). `null` model or points → `ArgumentNullException`, no points →
+  `ArgumentException`.
+- Comparison tests must take errors from `SensorModelError` and sector lookups from `FindSector`
+  instead of their own calculations.
 - Stored coefficients (issue #28): the result of a characterization is what `SectorSensor` holds,
   and the consumer (TwoFactRegressCalc) takes the coefficients from it and saves them anywhere
   (Excel, file, sensor). `GetPressure` is mainly for checking our methods inside the library.
@@ -197,7 +213,8 @@ matching it. Units don't matter to the method; don't mention them in code or tes
   - The `SectorSensorCoefficientsReport` test prints both tables tab-separated for Excel.
 - Tests: `SolversTests\SensorComparison\` (`NodeTests`, `ContinuityTests`,
   `SyntheticQuadraticTests`, `UniformGridFormulaTests`, `GridValidationTests`,
-  `WorkedExampleTests` = points А, Б, В of the document, `SensorComparisonTests`,
+  `WorkedExampleTests` = points А, Б, В of the document, `FindSectorTests`,
+  `SensorModelErrorTests`, `SensorComparisonTests`,
   `SectorValuesTests`). Data:
   `Sensor00249979Dataset` (55 calibration points) and `Sensor00249979ValidationGrid` (9 × 31).
 - Comparison on the 224 validation points outside the calibration sample (error in units of the
@@ -253,7 +270,10 @@ validation on series 18 and 24.5 (22 points).
   corrects the rest. The rough point is in a different sector than the final pressure (or
   outside the grid) for 6 of 22 points (3×11) and 3 of 22 (3×5); the sector that produced the
   result does not contain the reference pressure for 0 of 22 (3×11) and 1 of 22 (3×5). The rough
-  temperature is off by at most 0.0073.
+  temperature is off by at most 0.0073. The second count asks whether one given sector contains
+  the point, so the test calls `FindSector` on a sensor holding only that sector: on the whole
+  sensor a reference pressure equal to a node pressure lies on a shared edge and is attributed
+  to the lower-numbered sector (that would give 8 and 3 of 22).
 
 ## ApproximationCalculationError
 
@@ -299,9 +319,9 @@ either way.
   leave-one-series-out test is intentionally red.
 - [#24](https://github.com/Georgiy-smr/RegressionLibrary/issues/24): `CalibrationDatasetChecker`
   for a whole dataset (see above). #21 (the single-series detector) is closed.
-- [#30](https://github.com/Georgiy-smr/RegressionLibrary/issues/30): comparison of the sector
-  method with the polynomial method on sensor 235 (see above). #26 (the sector method itself) and
-  #28 (access to its coefficients) are closed.
+- [#32](https://github.com/Georgiy-smr/RegressionLibrary/issues/32): `SensorModelError` and
+  `SectorSensor.FindSector` (see above). #26 (the sector method itself), #28 (access to its
+  coefficients) and #30 (comparison on sensor 235) are closed.
 
 ## Workflow conventions observed in this repo's history
 
