@@ -27,7 +27,15 @@ public sealed class SectorSensorCharacterizer : ISensorCharacterizer
         if (points is null) throw new ArgumentNullException(nameof(points));
         var calibration = points.ToArray();
 
-        var roughSensor = _roughCharacterizer.Characterize(calibration);
+        return Characterize(calibration, _roughCharacterizer.Characterize(calibration));
+    }
+
+    public SectorSensor Characterize(IEnumerable<CalibrationPoint> points, PolynomialSensor roughSensor)
+    {
+        if (points is null) throw new ArgumentNullException(nameof(points));
+        if (roughSensor is null) throw new ArgumentNullException(nameof(roughSensor));
+        var calibration = points.ToArray();
+
         var series = SplitIntoSeries(calibration);
         var nodes = BuildNodes(series, roughSensor);
 

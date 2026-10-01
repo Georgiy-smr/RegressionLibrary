@@ -136,3 +136,72 @@ DatasetCheckResult result = checker.Check(dataset);
   `CodeError`.
 - **`IsClean`** is true only when every series is a `CheckedSeries` with no suspicious points. An
   empty dataset gives no series and is clean.
+
+## Sector compensation of a pressure sensor
+
+Namespace `Regression.SectorCompensation`. A sensor model turns the two codes of a sensor into
+pressure: `ISensorModel.GetPressure(pressureCode, temperatureCode)`. A model only stores
+coefficients; a characterizer fits them to calibration points.
+
+```csharp
+var characterizer = new SectorSensorCharacterizer(new PolynomialSensorCharacterizer());
+SectorSensor sensor = characterizer.Characterize(points);
+double pressure = sensor.GetPressure(pressureCode, temperatureCode);
+```
+
+- **Input:** `CalibrationPoint(PressureCode, TemperatureCode, Pressure, Temperature)`, one per
+  calibration point, in any order. `Pressure` and `Temperature` are the reference values; their
+  units don't matter, the result is in the units of `Pressure`.
+- **`PolynomialSensor`** is the polynomial method: a pressure polynomial and a temperature
+  polynomial of both codes, 9, 16 or 25 coefficients each (2nd / 3rd / 4th order, terms in the
+  order of `Second/Third/FourthOrderBasisExponents`). `GetPressure` and `GetTemperature` evaluate
+  them. `PolynomialSensorCharacterizer` fits both by least squares on the same points; by default
+  3rd order for pressure and 2nd order for temperature (16 + 9), other orders through
+  `PolynomialSensorCharacterizer(pressureBasis, temperatureBasis)`.
+- **`SectorSensor`** adds a fine stage on top of a `PolynomialSensor` (the rough stage). The rough
+  polynomials give a rough pressure and temperature, these select a triangular sector of the
+  calibration grid, and the sector's 6-coefficient polynomial gives the final pressure. At every
+  grid node the result equals the reference pressure. The algorithm is described step by step in
+  [SectorSensorAlgorithm.md](https://github.com/Georgiy-smr/RegressionLibrary/blob/main/docs/SectorSensorAlgorithm.md)
+  (in Russian).
+- **`SectorSensorCharacterizer(roughCharacterizer, nodePressureIndices, seriesTemperatureGap)`:**
+  - `Characterize(points)` fits the rough stage with `roughCharacterizer` and builds the sectors.
+  - `Characterize(points, roughSensor)` builds the sectors on a `PolynomialSensor` you already
+    have, e.g. `new PolynomialSensor(pressureCoefficients, temperatureCoefficients)` from any
+    solver of the two-factor fit above.
+  - `nodePressureIndices` selects which pressures of a series are grid nodes (indices in ascending
+    pressure order); by default all of them.
+- **Data requirements:** the points are split into temperature series the same way as in
+  `CalibrationDatasetChecker` (`seriesTemperatureGap`, default 2). The number of series and the
+  number of node pressures must both be odd and at least 3, and every series must have the same
+  pressures; otherwise `ArgumentException`.
+- **Taking the coefficients:** `sensor.RoughSensor.PressureCoefficients` and
+  `TemperatureCoefficients`, then `sensor.Sectors`, one `Sector` per row in the order of their
+  numbers. `Sector.Values` is the 12 numbers of a row: P1, T1, P2, T2, P3, T3 (the three vertices
+  of the triangle; vertex 1 is the node that dP and dT are measured from), then c0…c5.
+  `sensor.StoredValueCount` is how many numbers have to be stored in total: the rough
+  coefficients plus 12 per sector.
+- **Rebuilding the sensor** from saved values:
+
+```csharp
+var sectors = rows.Select((row, index) => new Sector(
+    index + 1,
+    new SectorNode(row[0], row[1]),
+    new SectorNode(row[2], row[3]),
+    new SectorNode(row[4], row[5]),
+    row.Skip(6)));
+var sensor = new SectorSensor(new PolynomialSensor(pressureCoefficients, temperatureCoefficients), sectors);
+```
+
+  Sector numbers must be 1, 2, 3, … in order. The rebuilt sensor gives exactly the same pressure.
+- **`SensorModelError(model, points)`** measures any `ISensorModel` against reference points:
+  `GetCurrent(point)` = |reference pressure − `GetPressure`|, `GetMax()`, `GetMean()`, and
+  `GetBySeries()` with the count, max and mean per distinct `Temperature` value.
+
+**Measured on real data** (max error on points the models were not fitted on, in units of the
+reference pressure). Sensor 00249979, 5 temperatures × 11 pressures, 224 validation points between
+the calibration points: polynomial 0.0037, sectors 5×11 0.0046. Sensor 235, validation at the
+calibration temperatures on the pressures that are not grid nodes: polynomial 0.0062, sectors 5×5
+0.0027. The sector method follows offsets between series that a smooth polynomial cannot, but it
+needs 12 stored numbers per sector, and neither method predicts a temperature that was not
+calibrated better than the other.
