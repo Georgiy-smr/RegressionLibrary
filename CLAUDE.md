@@ -211,6 +211,50 @@ matching it. Units don't matter to the method; don't mention them in code or tes
 
 - `ClassLibraryMath\Packaging\Descriptions.md` is not updated while the method is experimental.
 
+### Sensor 235 (issue #30)
+
+The same comparison on sensor 235, tests only (`Sensor235ComparisonTests`, data
+`Sensor235CalibrationPoints` = `Sensor235Samples` with nominal temperatures 15 / 18 / 21 / 24.5 /
+28, no jitter; not `Sensor235Dataset`). The tests are reports: they print the tables and assert
+only the number of validation points and the coefficient / stored value counts. Errors are in
+units of the reference pressure.
+
+E1, at the calibration temperatures: validation on the 30 non-node points (pressure indices 1, 3,
+5, 6, 8, 9 of every series).
+
+| Variant | Coefficients | Stored values | Max error | Mean error | Max per series 15 / 18 / 21 / 24.5 / 28 |
+|---|---|---|---|---|---|
+| PolynomialSensor on all 55 points (in-sample) | 25 | 25 | 0.0062 | 0.0027 | 0.0014 / 0.0041 / 0.0062 / 0.0042 / 0.0018 |
+| PolynomialSensor on the 25 node points | 25 | 25 | 0.0065 | 0.0027 | 0.0015 / 0.0042 / 0.0065 / 0.0049 / 0.0020 |
+| SectorSensor 5×5 (pressure nodes 0, 2, 4, 7, 10) | 73 | 121 | 0.0027 | 0.0008 | 0.0004 / 0.0027 / 0.0017 / 0.0015 / 0.0014 |
+
+E2, between the calibration temperatures: characterization on series 15, 21, 28 (33 points),
+validation on series 18 and 24.5 (22 points).
+
+| Variant | Coefficients | Stored values | Max error | Mean error | Max at 18 | Max at 24.5 |
+|---|---|---|---|---|---|---|
+| PolynomialSensor (16 + 9) | 25 | 25 | 0.4458 | 0.1818 | 0.3647 | 0.4458 |
+| SectorSensor 3×11 | 85 | 145 | 0.0157 | 0.0072 | 0.0157 | 0.0035 |
+| SectorSensor 3×5 | 49 | 73 | 0.0157 | 0.0073 | 0.0157 | 0.0035 |
+
+- At the calibration temperatures the sector method wins (0.0027 against 0.0062, under the 0.003
+  of issue #10). Sensor 235 has per-series zero offsets (`FiveOriginalPerSeriesResidualBreakdown`)
+  that a polynomial smooth in temperature can't follow, while the sector polynomials pass exactly
+  through the nodes of every series. On sensor 00249979 the characteristic is smooth, so there
+  our method wins.
+- Between the calibration temperatures there is no gain: 0.0157 at 18 and 0.0035 at 24.5, the
+  same as the earlier Python check gave for a 12-term polynomial without T³ (0.0157 / 0.0033).
+  The offset of an unseen series can't be interpolated from its neighbours by either method, so
+  issue #10 stays open.
+- With 3 temperatures the T³ terms of the 16-coefficient pressure polynomial are undetermined:
+  `PolynomialSensor` misses by up to 0.4458 on the unseen series, and that polynomial is also the
+  rough stage of both sector variants. Sector selection survives it, because 0.45 is small next
+  to the pressure step of the grid (about 20 for 3×11, about 40 for 3×5) and the refinement step
+  corrects the rest. The rough point is in a different sector than the final pressure (or
+  outside the grid) for 6 of 22 points (3×11) and 3 of 22 (3×5); the sector that produced the
+  result does not contain the reference pressure for 0 of 22 (3×11) and 1 of 22 (3×5). The rough
+  temperature is off by at most 0.0073.
+
 ## ApproximationCalculationError
 
 `Regression.ErrorAnalysis` namespace, `ClassLibraryMath\ErrorAnalysis\ApproximationCalculationError.cs`
@@ -255,8 +299,9 @@ either way.
   leave-one-series-out test is intentionally red.
 - [#24](https://github.com/Georgiy-smr/RegressionLibrary/issues/24): `CalibrationDatasetChecker`
   for a whole dataset (see above). #21 (the single-series detector) is closed.
-- [#28](https://github.com/Georgiy-smr/RegressionLibrary/issues/28): convenient access to the
-  sector method's coefficients (see above). #26 (the sector method itself) is closed.
+- [#30](https://github.com/Georgiy-smr/RegressionLibrary/issues/30): comparison of the sector
+  method with the polynomial method on sensor 235 (see above). #26 (the sector method itself) and
+  #28 (access to its coefficients) are closed.
 
 ## Workflow conventions observed in this repo's history
 
