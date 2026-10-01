@@ -137,10 +137,12 @@ lives here; the app only calls it and shows the result.
 - The splitting and the nominal temperature live in the internal `TemperatureSeriesSplitter`,
   shared with `SectorSensorCharacterizer`.
 
-## SectorCompensation (issue #26, experimental)
+## SectorCompensation (issue #26, released in package 1.3.0)
 
 `Regression.SectorCompensation`, `ClassLibraryMath\SectorCompensation\`. A sector-based pressure
-compensation method, compared with our method on sensor No. 00249979. The algorithm is described
+compensation method, compared with our method on sensor No. 00249979. It is described for package
+users in `ClassLibraryMath\Packaging\Descriptions.md` (keep that section in step with changes
+here). The algorithm is described
 step by step in [`docs\SectorSensorAlgorithm.md`](docs/SectorSensorAlgorithm.md) (in Russian); a
 colleague reproduces it in Excel from that document, so `SectorSensor.GetPressure` must keep
 matching it. Units don't matter to the method; don't mention them in code or tests.
@@ -148,9 +150,25 @@ matching it. Units don't matter to the method; don't mention them in code or tes
 - `ISensorModel.GetPressure(pressureCode, temperatureCode)` is the common contract. A model only
   stores coefficients; fitting is done by an `ISensorCharacterizer`
   (`Characterize(IEnumerable<CalibrationPoint>)`). No static factory methods.
-- `PolynomialSensor` / `PolynomialSensorCharacterizer` — our method: 16 pressure + 9 temperature
-  coefficients, both fitted by `PolynomialLeastSquaresSolver` on the same points (Y = pressure /
-  temperature) and evaluated through `TwoFactorPolynomialValue`.
+- `PolynomialSensor` / `PolynomialSensorCharacterizer` — our method: a pressure and a temperature
+  polynomial, both fitted by `PolynomialLeastSquaresSolver` on the same points (Y = pressure /
+  temperature) and evaluated through `TwoFactorPolynomialValue`. The default characterizer gives
+  16 pressure + 9 temperature coefficients (3rd / 2nd order).
+- Rough stage of any degree and model (issue #34): `PolynomialSensor` accepts 9, 16 or 25
+  coefficients for pressure and for temperature (the lengths `TwoFactorPolynomialValue` supports,
+  terms in its order), any other length → `ArgumentException`; `CoefficientCount` is the actual
+  sum. `PolynomialSensorCharacterizer(pressureBasis, temperatureBasis)` works with the 2nd / 3rd /
+  4th order bases in any combination.
+  `SectorSensorCharacterizer.Characterize(points, roughSensor)` builds the sectors on a given
+  `PolynomialSensor` (node temperatures from its temperature polynomial; it becomes
+  `SectorSensor.RoughSensor`); `Characterize(points)` fits the rough stage with the characterizer
+  from the constructor and calls it. This is for the "Sector" button of TwoFactRegressCalc: the
+  operator picks the pressure and temperature models (Gauss, QR normal equations, QR design
+  matrix, Minimax; 2nd–4th order), the app builds `new PolynomialSensor(pressure, temperature)`
+  from the picked coefficients and passes it in. `RoughStageTests` on sensor 00249979, sector
+  sensor 5×11, max error on the 224 validation points (report only): 0.0046 for every rough
+  stage tried, while the rough stage alone gives 0.0091 (least squares 2nd order), 0.0037 (3rd),
+  0.0052 (4th), 0.0049 (minimax 3rd).
 - `SectorSensor` / `SectorSensorCharacterizer`:
   1. Rough stage: the embedded `PolynomialSensor` gives rough P and T from both codes.
   2. Triangle selection in (P, T): first triangle in storage order that contains the point (edges
@@ -194,7 +212,7 @@ matching it. Units don't matter to the method; don't mention them in code or tes
 
   | Table | Source | Content |
   |---|---|---|
-  | Rough stage | `SectorSensor.RoughSensor` (`PolynomialSensor`) | `PressureCoefficients` a0…a15, `TemperatureCoefficients` b0…b8 (`TwoFactorPolynomialValue` order) |
+  | Rough stage | `SectorSensor.RoughSensor` (`PolynomialSensor`) | `PressureCoefficients`, `TemperatureCoefficients` (9, 16 or 25 each, `TwoFactorPolynomialValue` order; a0…a15 and b0…b8 by default) |
   | Sector table | `SectorSensor.Sectors`, one `Sector` per row, in the order of their numbers | N, P1, T1, P2, T2, P3, T3, c0…c5 |
 
   - `Sector` (immutable class): `Number` (1-based = position in `Sectors` + 1), `Vertex1`,
@@ -202,9 +220,11 @@ matching it. Units don't matter to the method; don't mention them in code or tes
     otherwise `ArgumentException`). **`Vertex1` is the anchor node**: dP and dT are measured from
     it, there is no separate P0, T0.
   - `Sector.Values` = the 12 numbers of the row after N: P1, T1, P2, T2, P3, T3, c0…c5.
-  - `SectorSensor.StoredValueCount` = 25 + 12 × number of sectors (265 for 5×11, 121 for 5×5):
-    how many numbers have to be stored for the sensor to work. `CoefficientCount` keeps its
-    meaning (25 + 6 × sectors).
+  - `SectorSensor.StoredValueCount` = rough coefficients + 12 × number of sectors: how many
+    numbers have to be stored for the sensor to work (with the default 25 rough coefficients, 265
+    for 5×11 and 121 for 5×5). `CoefficientCount` = rough coefficients + 6 × sectors. Both use
+    the rough sensor's actual `CoefficientCount` (e.g. 25 + 9 for 4th-order pressure and
+    2nd-order temperature).
   - Rebuilding from saved values: `new SectorSensor(new PolynomialSensor(pressure, temperature),
     sectors)`, each sector as `new Sector(number, vertex1, vertex2, vertex3, coefficients)` from
     its saved row. The constructor checks that the sector numbers are 1, 2, 3, … in order
@@ -215,7 +235,7 @@ matching it. Units don't matter to the method; don't mention them in code or tes
   `SyntheticQuadraticTests`, `UniformGridFormulaTests`, `GridValidationTests`,
   `WorkedExampleTests` = points А, Б, В of the document, `FindSectorTests`,
   `SensorModelErrorTests`, `SensorComparisonTests`,
-  `SectorValuesTests`). Data:
+  `SectorValuesTests`, `RoughStageTests`). Data:
   `Sensor00249979Dataset` (55 calibration points) and `Sensor00249979ValidationGrid` (9 × 31).
 - Comparison on the 224 validation points outside the calibration sample (error in units of the
   reference pressure; asserted against the Python prototype within 0.0002):
@@ -225,8 +245,6 @@ matching it. Units don't matter to the method; don't mention them in code or tes
   | PolynomialSensor | 25 | 0.0037 | 0.0010 |
   | SectorSensor 5×11 | 145 | 0.0046 | 0.0011 |
   | SectorSensor 5×5 (pressure nodes 0, 2, 4, 7, 10) | 73 | 0.0126 | 0.0040 |
-
-- `ClassLibraryMath\Packaging\Descriptions.md` is not updated while the method is experimental.
 
 ### Sensor 235 (issue #30)
 
@@ -319,9 +337,11 @@ either way.
   leave-one-series-out test is intentionally red.
 - [#24](https://github.com/Georgiy-smr/RegressionLibrary/issues/24): `CalibrationDatasetChecker`
   for a whole dataset (see above). #21 (the single-series detector) is closed.
-- [#32](https://github.com/Georgiy-smr/RegressionLibrary/issues/32): `SensorModelError` and
-  `SectorSensor.FindSector` (see above). #26 (the sector method itself), #28 (access to its
-  coefficients) and #30 (comparison on sensor 235) are closed.
+- [#34](https://github.com/Georgiy-smr/RegressionLibrary/issues/34): rough stage of any degree
+  and model for the sector method, package version 1.3.0 (see above; the package is packed but
+  not published by this change). #26 (the sector method itself), #28 (access to its
+  coefficients), #30 (comparison on sensor 235) and #32 (`SensorModelError`, `FindSector`) are
+  closed.
 
 ## Workflow conventions observed in this repo's history
 

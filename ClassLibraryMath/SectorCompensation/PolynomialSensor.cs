@@ -5,8 +5,7 @@ namespace Regression.SectorCompensation;
 
 public sealed class PolynomialSensor : ISensorModel
 {
-    private const int PressureCoefficientCount = 16;
-    private const int TemperatureCoefficientCount = 9;
+    private static readonly int[] SupportedCoefficientCounts = { 9, 16, 25 };
 
     private readonly double[] _pressureCoefficients;
     private readonly double[] _temperatureCoefficients;
@@ -19,10 +18,10 @@ public sealed class PolynomialSensor : ISensorModel
         _pressureCoefficients = pressureCoefficients.ToArray();
         _temperatureCoefficients = temperatureCoefficients.ToArray();
 
-        if (_pressureCoefficients.Length != PressureCoefficientCount)
-            throw new ArgumentException($"The pressure polynomial must have {PressureCoefficientCount} coefficients, but got {_pressureCoefficients.Length}.", nameof(pressureCoefficients));
-        if (_temperatureCoefficients.Length != TemperatureCoefficientCount)
-            throw new ArgumentException($"The temperature polynomial must have {TemperatureCoefficientCount} coefficients, but got {_temperatureCoefficients.Length}.", nameof(temperatureCoefficients));
+        if (!SupportedCoefficientCounts.Contains(_pressureCoefficients.Length))
+            throw new ArgumentException($"The pressure polynomial must have 9, 16 or 25 coefficients, but got {_pressureCoefficients.Length}.", nameof(pressureCoefficients));
+        if (!SupportedCoefficientCounts.Contains(_temperatureCoefficients.Length))
+            throw new ArgumentException($"The temperature polynomial must have 9, 16 or 25 coefficients, but got {_temperatureCoefficients.Length}.", nameof(temperatureCoefficients));
     }
 
     public IReadOnlyList<double> PressureCoefficients => _pressureCoefficients;
