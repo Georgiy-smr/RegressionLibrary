@@ -2,7 +2,7 @@ namespace Regression.SectorCompensation;
 
 public sealed record SectorNode(double Pressure, double Temperature);
 
-public sealed record Sector
+public sealed class Sector
 {
     private const int CoefficientCount = 6;
 

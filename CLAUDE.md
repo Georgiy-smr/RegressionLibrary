@@ -181,7 +181,7 @@ matching it. Units don't matter to the method; don't mention them in code or tes
   | Rough stage | `SectorSensor.RoughSensor` (`PolynomialSensor`) | `PressureCoefficients` a0…a15, `TemperatureCoefficients` b0…b8 (`TwoFactorPolynomialValue` order) |
   | Sector table | `SectorSensor.Sectors`, one `Sector` per row, in the order of their numbers | N, P1, T1, P2, T2, P3, T3, c0…c5 |
 
-  - `Sector` (immutable record): `Number` (1-based = position in `Sectors` + 1), `Vertex1`,
+  - `Sector` (immutable class): `Number` (1-based = position in `Sectors` + 1), `Vertex1`,
     `Vertex2`, `Vertex3` (`SectorNode(Pressure, Temperature)`), `Coefficients` (exactly 6,
     otherwise `ArgumentException`). **`Vertex1` is the anchor node**: dP and dT are measured from
     it, there is no separate P0, T0.
