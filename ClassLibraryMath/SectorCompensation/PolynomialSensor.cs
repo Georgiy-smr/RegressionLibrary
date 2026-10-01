@@ -29,6 +29,8 @@ public sealed class PolynomialSensor : ISensorModel
 
     public IReadOnlyList<double> TemperatureCoefficients => _temperatureCoefficients;
 
+    public IReadOnlyList<double> Values => _pressureCoefficients.Concat(_temperatureCoefficients).ToArray();
+
     public int CoefficientCount => _pressureCoefficients.Length + _temperatureCoefficients.Length;
 
     public double GetPressure(double pressureCode, double temperatureCode)

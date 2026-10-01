@@ -171,9 +171,26 @@ matching it. Units don't matter to the method; don't mention them in code or tes
 - `SectorSensor.Trace` returns the rough P and T, the number of the sector that produced the
   result and the final pressure; `RoughSensor` and `Sectors` are exported for Excel by the
   `SectorSensorCoefficientsReport` test.
+- Flat array (issue #28): the consumer (TwoFactRegressCalc) gets the result as one flat array,
+  as with `IPolynomialFitService.GetValues`, and formats it itself. `SectorSensor.Values`
+  (`IReadOnlyList<double>`, 25 + 12 × number of sectors: 265 for 5×11, 121 for 5×5):
+
+  | Positions (0-based) | Content |
+  |---|---|
+  | 0–15 | rough pressure coefficients a0…a15 (`TwoFactorPolynomialValue` order) |
+  | 16–24 | rough temperature coefficients b0…b8 |
+  | 25 + 12·(k − 1) … + 5 | sector k (1-based): P1, T1, P2, T2, P3, T3 |
+  | 25 + 12·(k − 1) + 6 … + 11 | sector k: c0…c5 |
+
+  The first 25 numbers are `PolynomialSensor.Values`, each block of 12 is `Sector.Values`. The
+  anchor node is not in the array (it always equals vertex 1), nor is the sector number (it is
+  the position in the list). `SectorFitService(SectorSensorCharacterizer).GetValues(points)`
+  characterizes the points and returns `SectorSensor.Values`; it deliberately does not implement
+  `IPolynomialFitService`, which takes `DataTwoFact` without a reference temperature.
 - Tests: `SolversTests\SensorComparison\` (`NodeTests`, `ContinuityTests`,
   `SyntheticQuadraticTests`, `UniformGridFormulaTests`, `GridValidationTests`,
-  `WorkedExampleTests` = points А, Б, В of the document, `SensorComparisonTests`). Data:
+  `WorkedExampleTests` = points А, Б, В of the document, `SensorComparisonTests`,
+  `SectorValuesTests`). Data:
   `Sensor00249979Dataset` (55 calibration points) and `Sensor00249979ValidationGrid` (9 × 31).
 - Comparison on the 224 validation points outside the calibration sample (error in units of the
   reference pressure; asserted against the Python prototype within 0.0002):
@@ -230,8 +247,8 @@ either way.
   leave-one-series-out test is intentionally red.
 - [#24](https://github.com/Georgiy-smr/RegressionLibrary/issues/24): `CalibrationDatasetChecker`
   for a whole dataset (see above). #21 (the single-series detector) is closed.
-- [#26](https://github.com/Georgiy-smr/RegressionLibrary/issues/26): sector compensation method
-  and its comparison with the polynomial method (see above).
+- [#28](https://github.com/Georgiy-smr/RegressionLibrary/issues/28): flat coefficient array for
+  the sector method (see above). #26 (the sector method itself) is closed.
 
 ## Workflow conventions observed in this repo's history
 

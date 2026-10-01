@@ -26,6 +26,8 @@ public sealed class SectorSensor : ISensorModel
 
     public IReadOnlyList<Sector> Sectors => _sectors;
 
+    public IReadOnlyList<double> Values => RoughSensor.Values.Concat(_sectors.SelectMany(sector => sector.Values)).ToArray();
+
     public int CoefficientCount => RoughSensor.CoefficientCount + 6 * _sectors.Length;
 
     public double GetPressure(double pressureCode, double temperatureCode) => Trace(pressureCode, temperatureCode).Pressure;
